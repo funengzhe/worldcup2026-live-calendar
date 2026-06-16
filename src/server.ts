@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import Fastify from "fastify";
 import { loadConfig } from "./config.js";
+import { checkHealth } from "./health.js";
 import { renderHome, renderMatchPage, renderStatus } from "./render.js";
 import { JsonStore } from "./store.js";
 import { publishCalendar, syncSchedule } from "./sync.js";
@@ -23,15 +24,14 @@ app.get("/api/status", async () => store.read());
 
 app.get("/healthz", async (_request, reply) => {
   const state = await store.read();
-  const hasMatches = state.matches.length > 0;
-  const hasPublication = Boolean(state.publication);
-  const ok = hasMatches && hasPublication;
+  const health = checkHealth(state, config);
 
-  reply.code(ok ? 200 : 503).send({
-    ok,
-    hasMatches,
-    hasPublication,
+  reply.code(health.ok ? 200 : 503).send({
+    ok: health.ok,
+    checks: health.checks,
     lastScheduleSyncAt: state.lastScheduleSyncAt,
+    lastScoreSyncAt: state.lastScoreSyncAt,
+    workerHeartbeatAt: state.workerHeartbeatAt,
     publication: state.publication
   });
 });

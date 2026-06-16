@@ -46,6 +46,22 @@ HEALTHCHECK_URL=http://127.0.0.1:3026/healthz scripts/healthcheck.sh
 
 生产环境可以用 systemd timer、cron 或外部监控定时执行。真实服务名、内网地址和告警地址应放在服务器环境中，不要提交到仓库。
 
+## 运行态备份
+
+备份当前状态和生成后的 ICS：
+
+```bash
+APP_DIR=/path/to/app BACKUP_DIR=/path/to/backups scripts/backup-runtime.sh
+```
+
+从备份恢复：
+
+```bash
+APP_DIR=/path/to/app scripts/restore-runtime.sh /path/to/backups/20260616T000000Z
+```
+
+真实服务器路径不要提交到仓库。
+
 ## 配置
 
 真实配置写入 `.env`，不要提交。
