@@ -1,0 +1,48 @@
+services:
+  web:
+    build: .
+    command: node dist/server.js
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${APP_BIND:-127.0.0.1:3000}:3000"
+    volumes:
+      - calendar-data:/app/data/runtime
+      - calendar-public:/app/public
+
+  worker:
+    build: .
+    command: node dist/worker.js
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - calendar-data:/app/data/runtime
+      - calendar-public:/app/public
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: worldcup2026
+      POSTGRES_USER: worldcup
+      POSTGRES_PASSWORD: worldcup
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    profiles:
+      - future-db
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    profiles:
+      - future-queue
+
+volumes:
+  calendar-data:
+  calendar-public:
+  postgres-data:
+  redis-data:
