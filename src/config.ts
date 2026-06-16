@@ -5,6 +5,10 @@ const optionalUrl = z.preprocess(
   (value) => (value === "" ? undefined : value),
   z.string().url().optional()
 );
+const optionalString = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().optional()
+);
 
 const EnvSchema = z.object({
   PUBLIC_BASE_URL: z.string().url().default("http://localhost:3000"),
@@ -55,6 +59,12 @@ const EnvSchema = z.object({
   SUPPORT_ALIPAY_URL: optionalUrl,
   SUPPORT_ALIPAY_QR_URL: optionalUrl,
   SUPPORT_GITHUB_SPONSORS_URL: optionalUrl,
+  ALIPAY_APP_ID: optionalString,
+  ALIPAY_PRIVATE_KEY: optionalString,
+  ALIPAY_PUBLIC_KEY: optionalString,
+  ALIPAY_GATEWAY: z.string().url().default("https://openapi.alipay.com/gateway.do"),
+  ALIPAY_RETURN_URL: optionalUrl,
+  ALIPAY_NOTIFY_URL: optionalUrl,
   ALERT_WEBHOOK_URL: z.string().optional(),
   ALERT_WEBHOOK_TYPE: z.enum(["generic", "feishu", "slack"]).default("generic")
 });

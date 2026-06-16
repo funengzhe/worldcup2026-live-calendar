@@ -43,14 +43,19 @@ describe("renderHome", () => {
     expect(html).toContain("场比赛");
     expect(html).toContain("<svg");
     expect(html).toContain('data-copy="webcal://example.com/worldcup2026.ics"');
+    expect(html).toContain("微信内打开可能无法唤起手机日历");
+    expect(html).toContain("sponsor-checkout");
+    expect(html).toContain("/api/v1/alipay/create_order");
     expect(html).toContain("墨西哥");
     expect(html).toContain("南非");
     expect(html).toContain("score-stack");
     expect(html).toContain("team-flag");
     expect(html).toContain("CCTV 5 直播");
     expect(html).toContain("支付宝通道准备中");
+    expect(html).toContain("webcal://example.com/feeds/teams/mexico.ics");
     expect(html).not.toContain("小组积分");
     expect(html).not.toContain("下载 ICS");
+    expect(html).not.toContain("pass-title");
   });
 
   it("renders configured support links without hard-coded payment details", async () => {

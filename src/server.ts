@@ -6,6 +6,7 @@ import { findTeamFeed, knockoutMatches, matchesForTeam, teamFeeds } from "./feed
 import { checkHealth } from "./health.js";
 import { teamDisplayNameZh } from "./localization.js";
 import { renderPrometheusMetrics } from "./metrics.js";
+import { createAlipayOrder, isAlipayConfigured, verifyAlipayNotify } from "./payments/alipay.js";
 import { checkReadiness } from "./readiness.js";
 import { renderHome, renderMatchPage, renderReadiness, renderStatus } from "./render.js";
 import { JsonStore } from "./store.js";
@@ -14,6 +15,15 @@ import { publishCalendar, syncSchedule } from "./sync.js";
 const config = loadConfig();
 const store = new JsonStore(config.statePath);
 const app = Fastify({ logger: true });
+
+app.addContentTypeParser(
+  "application/x-www-form-urlencoded",
+  { parseAs: "string" },
+  (_request, body, done) => {
+    const params = new URLSearchParams(body.toString());
+    done(null, Object.fromEntries(params.entries()));
+  }
+);
 
 app.get("/", async (_request, reply) => {
   const state = await store.read();
@@ -43,6 +53,59 @@ app.get("/api/feeds", async () => {
       path: `/feeds/teams/${feed.slug}.ics`
     }))
   };
+});
+
+app.post("/api/v1/alipay/create_order", async (request, reply) => {
+  if (!isAlipayConfigured(config)) {
+    reply.code(503).send({
+      ok: false,
+      code: "ALIPAY_NOT_CONFIGURED",
+      message: "支付宝支付通道正在配置中，请稍后再试。"
+    });
+    return;
+  }
+
+  try {
+    const body = request.body as { amount?: unknown } | undefined;
+    const order = createAlipayOrder(config, {
+      amount: body?.amount,
+      userAgent: request.headers["user-agent"]
+    });
+    reply.send({
+      ok: true,
+      amount: order.amount,
+      formHtml: order.formHtml,
+      method: order.method,
+      orderNo: order.orderNo
+    });
+  } catch (error) {
+    reply.code(400).send({
+      ok: false,
+      code: "ALIPAY_ORDER_FAILED",
+      message: error instanceof Error ? error.message : "创建支付订单失败"
+    });
+  }
+});
+
+app.post("/api/v1/alipay/notify", async (request, reply) => {
+  const payload = (request.body ?? {}) as Record<string, unknown>;
+  const verified = verifyAlipayNotify(config, payload);
+  if (!verified) {
+    app.log.warn({ payload }, "Alipay notify signature verification failed");
+    reply.type("text/plain").send("failure");
+    return;
+  }
+
+  app.log.info(
+    {
+      outTradeNo: payload.out_trade_no,
+      tradeNo: payload.trade_no,
+      tradeStatus: payload.trade_status,
+      totalAmount: payload.total_amount
+    },
+    "Alipay sponsor payment notify verified"
+  );
+  reply.type("text/plain").send("success");
 });
 
 app.get("/metrics", async (_request, reply) => {

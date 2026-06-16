@@ -84,6 +84,12 @@ APP_DIR=/path/to/app scripts/restore-runtime.sh /path/to/backups/20260616T000000
 - `SUPPORT_ALIPAY_URL`
 - `SUPPORT_ALIPAY_QR_URL`
 - `SUPPORT_GITHUB_SPONSORS_URL`
+- `ALIPAY_APP_ID`
+- `ALIPAY_PRIVATE_KEY`
+- `ALIPAY_PUBLIC_KEY`
+- `ALIPAY_GATEWAY`
+- `ALIPAY_RETURN_URL`
+- `ALIPAY_NOTIFY_URL`
 - `ALERT_WEBHOOK_URL`
 
 ### 配置打赏入口
@@ -96,6 +102,21 @@ SUPPORT_ALIPAY_QR_URL=<your-public-alipay-qr-image-url>
 ```
 
 不要把个人收款码、商户后台链接、密钥或服务器私有地址提交到公开仓库。
+
+### 启用支付宝官方支付
+
+首页通行证下方有“赞助支持”收银台。未配置支付宝密钥时，接口会安全返回“支付宝支付通道正在配置中”。申请完成后，在生产环境 `.env` 写入：
+
+```bash
+ALIPAY_APP_ID=<your-alipay-app-id>
+ALIPAY_PRIVATE_KEY=<your-app-private-key>
+ALIPAY_PUBLIC_KEY=<alipay-public-key>
+ALIPAY_GATEWAY=https://openapi.alipay.com/gateway.do
+ALIPAY_RETURN_URL=https://<public-host>/?payment=return
+ALIPAY_NOTIFY_URL=https://<public-host>/api/v1/alipay/notify
+```
+
+真实支付结果必须以支付宝异步通知 `/api/v1/alipay/notify` 验签成功为准，前端跳转只用于用户体验。
 
 ### 启用 API-Football 主比分源
 

@@ -27,7 +27,7 @@ export async function renderHome(
 ): Promise<string> {
   const baseUrl = publicBaseUrl.replace(/\/$/, "");
   const icsUrl = `${baseUrl}/worldcup2026.ics`;
-  const webcalUrl = `webcal://${icsUrl.replace(/^https?:\/\//, "")}`;
+  const webcalUrl = toWebcalUrl(icsUrl);
   const teams = teamFeeds(state.matches);
   const days = scheduleDays(state.matches);
   const initialDate = pickInitialDateKey(days);
@@ -41,7 +41,7 @@ export async function renderHome(
     matches: state.matches.map(clientMatch),
     teams: teams.map((feed) => ({
       label: teamDisplayNameZh(feed.team),
-      path: `${baseUrl}/feeds/teams/${feed.slug}.ics`,
+      path: toWebcalUrl(`${baseUrl}/feeds/teams/${feed.slug}.ics`),
       matchCount: feed.matchCount
     }))
   };
@@ -84,10 +84,15 @@ export async function renderHome(
           <a href="#schedule" data-tab-link="knockout">淘汰赛</a>
           <a href="#schedule" data-tab-link="subscribe">日历订阅</a>
         </nav>
-        <a class="login-pill" href="${escapeHtml(webcalUrl)}">订阅</a>
+        <a class="login-pill" href="${escapeHtml(webcalUrl)}" data-webcal-link>订阅</a>
       </header>
 
       <main class="shell" id="top">
+        <div class="wechat-tip" id="wechat-tip" hidden>
+          <strong>微信内打开可能无法唤起手机日历</strong>
+          <span>请点击右上角“...”选择“在浏览器打开”，再点“一键添加到手机日历”。复制 webcal 链接后也可以在系统日历中手动添加订阅。</span>
+        </div>
+
         <section class="hero-grid" id="subscribe" aria-label="2026世界杯赛程订阅">
           <div class="hero-left">
             <h1>2026世界杯赛程</h1>
@@ -107,29 +112,12 @@ export async function renderHome(
           </div>
 
           <section class="match-pass" aria-label="赛程订阅通行证">
-            <div class="pass-art">
-              <div class="pass-title">
-                <p>FIFA WORLD CUP 2026™</p>
-                <h2>MATCH PASS</h2>
-              </div>
+            <div class="pass-art" role="img" aria-label="FIFA WORLD CUP 2026 MATCH PASS 日历订阅通行证">
               <div class="pass-qr-slot">
                 <div class="qr" aria-label="订阅二维码">
                   ${qrSvg}
-                  <span class="qr-scan" aria-hidden="true"></span>
                 </div>
               </div>
-              <div class="pass-badge">
-                <strong>2026</strong>
-                <span>世界杯</span>
-                <small>赛程通行证</small>
-              </div>
-              <div class="pass-info">
-                <strong>日历订阅</strong>
-                <span>赛果自动更新</span>
-                <span>北京时间汉化</span>
-                <span>手机无感同步</span>
-              </div>
-              <div class="pass-live-tag" aria-label="实时源状态">LIVE SRC</div>
             </div>
             <div class="copy-row pass-copy">
               <input readonly value="${escapeHtml(webcalUrl)}" aria-label="订阅地址" />
@@ -137,10 +125,11 @@ export async function renderHome(
             </div>
             <p class="pass-note">网络订阅源会持续同步赛程、赛果和时间调整。</p>
             <div class="pass-actions">
-              <a class="mobile-primary" href="${escapeHtml(webcalUrl)}">一键添加到手机日历</a>
-              <a href="${escapeHtml(webcalUrl)}">Apple 日历</a>
+              <a class="mobile-primary" href="${escapeHtml(webcalUrl)}" data-webcal-link>一键添加到手机日历</a>
+              <a href="${escapeHtml(webcalUrl)}" data-webcal-link>Apple 日历</a>
               <a href="https://calendar.google.com/calendar/render?cid=${encodeURIComponent(icsUrl)}">Google 日历</a>
             </div>
+            ${renderSponsorCheckout()}
           </section>
         </section>
 
@@ -179,7 +168,7 @@ export async function renderHome(
             </div>
             <p class="sync-note">本站订阅源会持续更新；iPhone、Google 日历等客户端的实际刷新频率由各自系统决定，通常不会像网页一样立即刷新。</p>
             <div class="subscribe-actions">
-              <a class="neon-link" href="${escapeHtml(webcalUrl)}">一键添加到手机日历</a>
+              <a class="neon-link" href="${escapeHtml(webcalUrl)}" data-webcal-link>一键添加到手机日历</a>
               <button type="button" data-copy="${escapeHtml(webcalUrl)}">复制 webcal 订阅链接</button>
             </div>
           </div>
@@ -198,7 +187,7 @@ export async function renderHome(
             <p class="eyebrow">Teams</p>
             <h2>球队订阅</h2>
             <div class="chips" id="team-feed-list">
-              ${teams.map((feed) => `<a href="${escapeHtml(`${baseUrl}/feeds/teams/${feed.slug}.ics`)}">${escapeHtml(teamDisplayNameZh(feed.team))}</a>`).join("")}
+              ${teams.map((feed) => `<a href="${escapeHtml(toWebcalUrl(`${baseUrl}/feeds/teams/${feed.slug}.ics`))}" data-webcal-link>${escapeHtml(teamDisplayNameZh(feed.team))}</a>`).join("")}
             </div>
           </section>
         </section>
@@ -249,6 +238,46 @@ function renderSupportFooter(support: SupportConfig): string {
       ${qr}
       <span class="support-status">${support.alipayUrl ? "支付宝支持已开启" : "等待支付宝支付功能配置"}</span>
     </div>
+  `;
+}
+
+function renderSponsorCheckout(): string {
+  return `
+    <section class="sponsor-checkout" id="sponsor-checkout" aria-label="赞助支持收银台">
+      <div class="sponsor-head">
+        <div>
+          <p class="eyebrow">Sponsor Pass</p>
+          <h2>赞助支持 / 为爱发电</h2>
+          <span>个人独立维护，赞助会用于服务器、数据同步和开源维护。</span>
+        </div>
+        <div class="alipay-trust">支付宝官方安全支付</div>
+      </div>
+      <div class="amount-grid" role="group" aria-label="选择赞助金额">
+        <button class="amount-option active" type="button" data-sponsor-amount="5">
+          <strong>¥ 5</strong>
+          <span>请喝可乐</span>
+        </button>
+        <button class="amount-option" type="button" data-sponsor-amount="15">
+          <strong>¥ 15</strong>
+          <span>来杯咖啡</span>
+        </button>
+        <button class="amount-option premium" type="button" data-sponsor-amount="50">
+          <strong>¥ 50</strong>
+          <span>超级球迷</span>
+        </button>
+      </div>
+      <label class="custom-amount">
+        <span>自定义金额</span>
+        <input id="sponsor-custom-amount" type="number" min="1" max="999" step="0.01" inputmode="decimal" placeholder="输入任意赞助金额" />
+        <small>元</small>
+      </label>
+      <button class="sponsor-pay-button" type="button" id="sponsor-pay-button">
+        <span class="alipay-mark" aria-hidden="true">支</span>
+        <span data-pay-label>立即唤起支付宝赞助</span>
+      </button>
+      <p class="sponsor-safe-note">资金由支付宝官方网关清算。本站不会接触你的支付密码或银行卡信息。</p>
+      <p class="sponsor-message" id="sponsor-message" role="status" aria-live="polite"></p>
+    </section>
   `;
 }
 
@@ -345,6 +374,10 @@ function page(title: string, body: string): string {
     .topnav a.active { color:#fff; box-shadow:inset 0 -2px 0 var(--gold); background:linear-gradient(180deg, transparent, rgba(212,175,55,.10)); }
     .login-pill { min-height:32px; display:inline-flex; align-items:center; justify-content:center; padding:0 14px; border:1px solid rgba(212,175,55,.48); border-radius:999px; color:var(--gold-2); text-decoration:none; font-weight:900; font-size:13px; }
     .shell { position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:42px 18px 72px; }
+    .wechat-tip { margin:-12px 0 22px; padding:14px 16px; border:1px solid rgba(0,255,102,.26); border-radius:16px; background:linear-gradient(180deg, rgba(0,255,102,.13), rgba(4,13,8,.74)); box-shadow:0 16px 40px rgba(0,0,0,.24), inset 0 0 20px rgba(0,255,102,.06); color:#dff7e6; }
+    .wechat-tip[hidden] { display:none; }
+    .wechat-tip strong { display:block; color:var(--neon); font-size:15px; margin-bottom:6px; }
+    .wechat-tip span { display:block; color:#b9cbbf; font-size:13px; line-height:1.65; }
     .hero-grid { min-height:338px; display:grid; grid-template-columns:minmax(0, 7fr) minmax(360px, 5fr); gap:34px; align-items:stretch; margin-bottom:26px; }
     .hero-left { display:flex; flex-direction:column; justify-content:space-between; gap:24px; padding:20px 0; }
     h1 { margin:0; max-width:760px; font-size:clamp(44px, 7.2vw, 86px); line-height:.98; letter-spacing:0; font-weight:1000; transform:skewX(-5deg); color:#fff; text-shadow:0 2px 0 rgba(0,0,0,.35), 0 0 24px rgba(255,255,255,.18); }
@@ -359,25 +392,10 @@ function page(title: string, body: string): string {
     .led-stat span { margin-top:9px; color:#9eb2a4; font-size:13px; font-weight:800; }
     .led-icon { margin-top:8px; color:rgba(255,255,255,.56); font-size:18px; }
     .match-pass { position:relative; display:grid; align-content:start; gap:10px; max-width:520px; justify-self:center; width:100%; }
-    .pass-art { container-type:inline-size; position:relative; width:100%; aspect-ratio:1332 / 751; background:url("/assets/img/blank-match-pass.png") center / contain no-repeat; filter:drop-shadow(0 28px 58px rgba(0,0,0,.62)); isolation:isolate; }
-    .pass-title { position:absolute; top:20.5%; left:18.6%; width:18.8%; text-align:left; text-shadow:0 0 10px rgba(0,0,0,.8); }
-    .pass-title p { margin:0 0 .8cqw; color:rgba(245,218,142,.90); font-size:2.05cqw; font-weight:1000; letter-spacing:.03em; line-height:1.02; }
-    .pass-title h2 { margin:0; color:#fff7d8; font-size:4.3cqw; font-weight:1000; line-height:.90; letter-spacing:0; }
-    .pass-qr-slot { position:absolute; top:34.6%; left:37.0%; width:26.2%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; }
-    .qr { position:relative; width:82%; height:82%; padding:4%; border-radius:6px; background:#fff; box-shadow:0 0 18px rgba(0,255,102,.42), 0 0 0 1px rgba(255,255,255,.28); overflow:hidden; }
+    .pass-art { position:relative; width:100%; aspect-ratio:1581 / 768; background:url("/assets/img/blank-match-pass.png") center / contain no-repeat; filter:drop-shadow(0 28px 58px rgba(0,0,0,.62)); isolation:isolate; }
+    .pass-qr-slot { position:absolute; top:33.4%; left:37.9%; width:22.4%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; }
+    .qr { position:relative; width:100%; height:100%; padding:4.2%; border-radius:8%; background:#fff; box-shadow:none; overflow:hidden; }
     .qr svg { width:100%; height:100%; display:block; }
-    .qr-scan { position:absolute; inset:0; border:1px solid rgba(0,255,102,.45); border-radius:6px; pointer-events:none; animation:qrPulse 1.9s ease-in-out infinite; }
-    .pass-badge { position:absolute; bottom:17.1%; left:14.5%; width:18.4%; height:16.8%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; text-shadow:0 0 12px rgba(0,0,0,.85); }
-    .pass-badge strong { color:#d4af37; font-size:6.15cqw; font-weight:1000; line-height:.88; }
-    .pass-badge span { margin-top:.72cqw; color:#eaf6eb; font-size:2.8cqw; font-weight:1000; line-height:1; }
-    .pass-badge small { margin-top:.5cqw; color:#cfe1d3; font-size:2.05cqw; font-weight:900; line-height:1; }
-    .pass-info { position:absolute; top:35.7%; right:13.0%; width:20.8%; min-height:26%; display:flex; flex-direction:column; justify-content:flex-start; gap:1.15cqw; text-align:left; text-shadow:0 0 12px rgba(0,0,0,.9); }
-    .pass-info strong { margin:0 0 .2cqw; color:#d4af37; font-size:4.55cqw; font-weight:1000; line-height:1; }
-    .pass-info span { position:relative; color:#dce9dd; font-size:2.55cqw; font-weight:900; line-height:1.18; padding-left:2.5cqw; }
-    .pass-info span::before { content:""; position:absolute; left:0; top:.34em; width:.9cqw; height:.9cqw; border-radius:999px; background:var(--neon); box-shadow:0 0 8px rgba(0,255,102,.75); }
-    .pass-live-tag { position:absolute; bottom:21.2%; right:13.7%; width:17.2%; height:8.2%; display:flex; align-items:center; justify-content:center; color:var(--neon); font:1000 2.8cqw/1 "SFMono-Regular", Consolas, monospace; letter-spacing:.12em; text-shadow:0 0 10px rgba(0,255,102,.7); animation:livePulse 1.8s ease-in-out infinite; }
-    @keyframes qrPulse { 0%, 100% { opacity:.52; box-shadow:inset 0 0 0 rgba(0,255,102,0); } 50% { opacity:1; box-shadow:inset 0 0 18px rgba(0,255,102,.28); } }
-    @keyframes livePulse { 0%, 100% { opacity:.72; } 50% { opacity:1; } }
     .copy-row { display:grid; grid-template-columns:minmax(0, 1fr) 74px; gap:8px; }
     .pass-copy { margin:0 6% 0; }
     .copy-row input { min-width:0; height:38px; border:1px solid rgba(255,255,255,.13); border-radius:10px; padding:0 10px; color:#cde4d3; background:rgba(0,0,0,.32); font:12px/1.2 "SFMono-Regular", Consolas, monospace; }
@@ -386,6 +404,34 @@ function page(title: string, body: string): string {
     .pass-actions { display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:8px; margin-top:12px; }
     .pass-actions a { min-height:36px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.13); border-radius:10px; background:rgba(255,255,255,.055); color:#fff; text-decoration:none; font-size:12px; font-weight:900; }
     .pass-actions .mobile-primary { border-color:transparent; background:linear-gradient(180deg, #00ff66, #00d957); color:#031007; box-shadow:0 0 16px rgba(0,255,102,.18); }
+    .sponsor-checkout { position:relative; margin-top:14px; padding:18px; border:1px solid rgba(212,175,55,.25); border-radius:18px; background:linear-gradient(180deg, rgba(13,31,22,.88), rgba(7,22,14,.88)); box-shadow:0 22px 54px rgba(0,0,0,.34), inset 0 0 28px rgba(0,255,102,.035); overflow:hidden; }
+    .sponsor-checkout::before { content:""; position:absolute; right:-42px; top:-42px; width:122px; height:122px; border-radius:999px; background:rgba(0,255,102,.06); filter:blur(18px); pointer-events:none; }
+    .sponsor-checkout > * { position:relative; }
+    .sponsor-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding-bottom:12px; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,.09); }
+    .sponsor-head h2 { color:#fff; font-size:17px; line-height:1.2; }
+    .sponsor-head span { display:block; margin-top:6px; color:#94a89a; font-size:12px; line-height:1.5; }
+    .alipay-trust { flex:0 0 auto; min-height:24px; display:inline-flex; align-items:center; padding:0 8px; border:1px solid rgba(22,119,255,.28); border-radius:8px; background:rgba(22,119,255,.12); color:#5ca1ff; font-size:10px; font-weight:1000; white-space:nowrap; }
+    .amount-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:9px; margin-bottom:12px; }
+    .amount-option { min-height:66px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.11); border-radius:14px; background:rgba(0,0,0,.28); color:#dbe8df; cursor:pointer; transition:border-color .18s ease, background .18s ease, transform .18s ease, box-shadow .18s ease; }
+    .amount-option:hover { border-color:rgba(255,255,255,.22); transform:translateY(-1px); }
+    .amount-option strong { font:1000 15px/1 "SFMono-Regular", Consolas, monospace; }
+    .amount-option span { margin-top:6px; color:#7f9388; font-size:10px; font-weight:900; }
+    .amount-option.active { border-color:rgba(0,255,102,.75); background:rgba(0,255,102,.10); color:var(--neon); box-shadow:0 0 16px rgba(0,255,102,.12); }
+    .amount-option.premium.active { border-color:rgba(212,175,55,.82); background:rgba(212,175,55,.12); color:var(--gold-2); box-shadow:0 0 16px rgba(212,175,55,.12); }
+    .custom-amount { min-height:44px; display:grid; grid-template-columns:auto minmax(0, 1fr) auto; gap:8px; align-items:center; margin-bottom:13px; padding:0 11px; border:1px solid rgba(255,255,255,.10); border-radius:14px; background:rgba(0,0,0,.34); transition:border-color .18s ease; }
+    .custom-amount:focus-within { border-color:rgba(0,255,102,.45); }
+    .custom-amount span, .custom-amount small { color:#7f9388; font-size:12px; font-weight:900; }
+    .custom-amount input { min-width:0; height:42px; border:0; outline:0; background:transparent; color:#fff; font:900 13px/1 "SFMono-Regular", Consolas, monospace; }
+    .custom-amount input::placeholder { color:#5d6e64; }
+    .sponsor-pay-button { width:100%; min-height:46px; display:flex; align-items:center; justify-content:center; gap:9px; border:0; border-radius:14px; background:#1677ff; color:#fff; font:1000 14px/1.2 inherit; cursor:pointer; box-shadow:0 0 18px rgba(22,119,255,.28); transition:transform .18s ease, background .18s ease, opacity .18s ease; }
+    .sponsor-pay-button:hover { background:#0f66df; }
+    .sponsor-pay-button:active { transform:scale(.98); }
+    .sponsor-pay-button[disabled] { opacity:.62; cursor:not-allowed; transform:none; }
+    .alipay-mark { width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; background:rgba(255,255,255,.18); color:#fff; font-size:13px; font-weight:1000; }
+    .sponsor-safe-note { margin:10px 0 0; color:#75887d; text-align:center; font-size:11px; line-height:1.5; }
+    .sponsor-message { min-height:18px; margin:8px 0 0; color:#aebfb4; text-align:center; font-size:12px; line-height:1.45; }
+    .sponsor-message.error { color:#ffb4a8; }
+    .sponsor-message.success { color:var(--neon); }
     .schedule-shell { margin-top:18px; }
     .schedule-tabs { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); min-height:50px; margin-bottom:16px; border:1px solid rgba(255,255,255,.09); border-radius:16px; background:rgba(2,8,5,.72); backdrop-filter:blur(14px); overflow:hidden; box-shadow:0 16px 40px rgba(0,0,0,.34); }
     .schedule-tabs button { appearance:none; border:0; border-left:1px solid rgba(255,255,255,.08); background:transparent; display:flex; align-items:center; justify-content:center; color:#f5fff7; text-decoration:none; font:900 14px/1.2 inherit; cursor:pointer; }
@@ -505,6 +551,9 @@ function page(title: string, body: string): string {
       .pass-art { margin:0 -6px; width:calc(100% + 12px); }
       .pass-copy { margin:0; }
       .copy-row, .pass-actions { grid-template-columns:1fr; }
+      .sponsor-head { display:grid; }
+      .alipay-trust { width:max-content; }
+      .amount-grid { grid-template-columns:repeat(3, minmax(0, 1fr)); }
       .schedule-tabs { grid-template-columns:repeat(4, minmax(0, 1fr)); overflow:hidden; }
       .schedule-tabs button { min-width:0; min-height:46px; padding:0 6px; font-size:12px; }
       .match-row { grid-template-columns:1fr; border-radius:18px; padding:14px; gap:12px; }
@@ -575,6 +624,99 @@ function page(title: string, body: string): string {
     setTimeout(() => {
       button.textContent = original;
     }, 1600);
+  });
+
+  const isWechatBrowser = /MicroMessenger/i.test(window.navigator.userAgent || "");
+  const wechatTip = document.getElementById("wechat-tip");
+  if (isWechatBrowser && wechatTip) {
+    wechatTip.hidden = false;
+  }
+
+  document.addEventListener("click", (event) => {
+    if (!isWechatBrowser || !(event.target instanceof Element)) return;
+    const link = event.target.closest("a[data-webcal-link], a[href^='webcal:']");
+    if (!link) return;
+    event.preventDefault();
+    if (wechatTip) {
+      wechatTip.hidden = false;
+      wechatTip.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  });
+
+  const sponsorCheckout = document.getElementById("sponsor-checkout");
+  const sponsorButtons = Array.from(document.querySelectorAll("[data-sponsor-amount]"));
+  const sponsorCustomAmount = document.getElementById("sponsor-custom-amount");
+  const sponsorPayButton = document.getElementById("sponsor-pay-button");
+  const sponsorPayLabel = sponsorPayButton?.querySelector("[data-pay-label]");
+  const sponsorMessage = document.getElementById("sponsor-message");
+  let selectedSponsorAmount = "5";
+  let sponsorSubmitting = false;
+
+  function setSponsorMessage(message, type) {
+    if (!sponsorMessage) return;
+    sponsorMessage.textContent = message || "";
+    sponsorMessage.classList.toggle("error", type === "error");
+    sponsorMessage.classList.toggle("success", type === "success");
+  }
+
+  function setSponsorSubmitting(isSubmitting) {
+    sponsorSubmitting = isSubmitting;
+    if (sponsorPayButton) sponsorPayButton.disabled = isSubmitting;
+    if (sponsorPayLabel) {
+      sponsorPayLabel.textContent = isSubmitting ? "正在安全连接支付宝..." : "立即唤起支付宝赞助";
+    }
+  }
+
+  sponsorButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedSponsorAmount = button.getAttribute("data-sponsor-amount") || "5";
+      sponsorButtons.forEach((item) => item.classList.toggle("active", item === button));
+      if (sponsorCustomAmount) sponsorCustomAmount.value = "";
+      setSponsorMessage("", "");
+    });
+  });
+
+  sponsorCustomAmount?.addEventListener("input", () => {
+    selectedSponsorAmount = "";
+    sponsorButtons.forEach((item) => item.classList.remove("active"));
+    setSponsorMessage("", "");
+  });
+
+  sponsorPayButton?.addEventListener("click", async () => {
+    if (sponsorSubmitting) return;
+    const customAmount = sponsorCustomAmount?.value?.trim();
+    const finalAmount = customAmount || selectedSponsorAmount;
+    const amount = Number(finalAmount);
+    if (!Number.isFinite(amount) || amount < 1 || amount > 999) {
+      setSponsorMessage("请输入 1-999 元之间的有效赞助金额。", "error");
+      return;
+    }
+
+    setSponsorSubmitting(true);
+    setSponsorMessage("正在创建支付宝安全订单...", "");
+    try {
+      const response = await fetch("/api/v1/alipay/create_order", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ amount })
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.ok || !payload.formHtml) {
+        throw new Error(payload.message || "支付通道暂时不可用");
+      }
+
+      setSponsorMessage("订单已创建，正在跳转支付宝...", "success");
+      const mount = document.createElement("div");
+      mount.hidden = true;
+      mount.innerHTML = payload.formHtml;
+      document.body.appendChild(mount);
+      const form = mount.querySelector("form");
+      if (!form) throw new Error("支付宝表单生成失败");
+      form.submit();
+    } catch (error) {
+      setSponsorMessage(error instanceof Error ? error.message : "创建支付订单失败", "error");
+      setSponsorSubmitting(false);
+    }
   });
 
   const scheduleDataEl = document.getElementById("schedule-data");
@@ -970,6 +1112,10 @@ function formatDate(iso: string): string {
     hour: "2-digit",
     minute: "2-digit"
   }).format(new Date(iso));
+}
+
+function toWebcalUrl(url: string): string {
+  return `webcal://${url.replace(/^https?:\/\//, "")}`;
 }
 
 function escapeHtml(value: string): string {
