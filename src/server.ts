@@ -17,7 +17,7 @@ const app = Fastify({ logger: true });
 
 app.get("/", async (_request, reply) => {
   const state = await store.read();
-  reply.type("text/html; charset=utf-8").send(renderHome(state, config.PUBLIC_BASE_URL));
+  reply.type("text/html; charset=utf-8").send(await renderHome(state, config.PUBLIC_BASE_URL));
 });
 
 app.get("/status", async (_request, reply) => {
