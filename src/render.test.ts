@@ -42,9 +42,10 @@ describe("renderHome", () => {
     expect(html).toContain("支球队");
     expect(html).toContain("场比赛");
     expect(html).toContain("<svg");
-    expect(html).toContain('data-copy="https://example.com/worldcup2026.ics"');
+    expect(html).toContain('data-copy="webcal://example.com/worldcup2026.ics"');
     expect(html).toContain("墨西哥");
     expect(html).toContain("南非");
     expect(html).toContain("CCTV 5 直播");
+    expect(html).not.toContain("下载 ICS");
   });
 });

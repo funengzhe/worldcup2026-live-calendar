@@ -18,8 +18,23 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
   const baseUrl = publicBaseUrl.replace(/\/$/, "");
   const icsUrl = `${baseUrl}/worldcup2026.ics`;
   const webcalUrl = `webcal://${icsUrl.replace(/^https?:\/\//, "")}`;
-  const knockoutUrl = `${baseUrl}/feeds/knockout.ics`;
   const teams = teamFeeds(state.matches);
+  const days = scheduleDays(state.matches);
+  const initialDate = pickInitialDateKey(days);
+  const initialMatches = matchesForDate(state.matches, initialDate).slice(0, 12);
+  const initialDay = days.find((day) => day.key === initialDate);
+  const clientState = {
+    webcalUrl,
+    googleUrl: `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(icsUrl)}`,
+    days,
+    selectedDate: initialDate,
+    matches: state.matches.map(clientMatch),
+    teams: teams.map((feed) => ({
+      label: teamDisplayNameZh(feed.team),
+      path: `${baseUrl}/feeds/teams/${feed.slug}.ics`,
+      matchCount: feed.matchCount
+    }))
+  };
   const qrSvg = await QRCode.toString(webcalUrl, {
     type: "svg",
     margin: 1,
@@ -42,11 +57,11 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
           <span><strong>2026世界杯</strong><small>赛程 · 赛果 · 日历订阅</small></span>
         </a>
         <nav class="topnav" aria-label="主导航">
-          <a class="active" href="#schedule">时间</a>
-          <a href="#team-feeds">球队</a>
-          <a href="#schedule">小组赛</a>
-          <a href="${escapeHtml(knockoutUrl)}">淘汰赛</a>
-          <a href="#subscribe">日历订阅</a>
+          <a class="active" href="#schedule" data-tab-link="focus">今日焦点</a>
+          <a href="#team-feeds" data-tab-link="teams">球队赛程</a>
+          <a href="#schedule" data-tab-link="groups">小组积分</a>
+          <a href="#schedule" data-tab-link="knockout">淘汰赛</a>
+          <a href="#schedule" data-tab-link="subscribe">日历订阅</a>
         </nav>
         <a class="login-pill" href="${escapeHtml(webcalUrl)}">订阅</a>
       </header>
@@ -59,7 +74,7 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
               <span>北京时间</span>
               <span>中文队名</span>
               <span>赛果自动更新</span>
-              <span>手机日历订阅</span>
+              <span>网络实时同步</span>
             </div>
 
             <div class="led-board" aria-label="赛事数据看板">
@@ -92,26 +107,44 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
               </div>
             </div>
             <div class="copy-row">
-              <input readonly value="${escapeHtml(icsUrl)}" aria-label="订阅地址" />
-              <button type="button" data-copy="${escapeHtml(icsUrl)}">复制</button>
+              <input readonly value="${escapeHtml(webcalUrl)}" aria-label="订阅地址" />
+              <button type="button" data-copy="${escapeHtml(webcalUrl)}">复制</button>
             </div>
+            <p class="pass-note">网络订阅源会持续同步赛程、赛果和时间调整。</p>
             <div class="pass-actions">
+              <a class="mobile-primary" href="${escapeHtml(webcalUrl)}">一键添加到手机日历</a>
               <a href="${escapeHtml(webcalUrl)}">Apple 日历</a>
               <a href="https://calendar.google.com/calendar/render?cid=${encodeURIComponent(icsUrl)}">Google 日历</a>
-              <a class="gold" href="${escapeHtml(icsUrl)}">下载 ICS</a>
             </div>
           </section>
         </section>
 
         <section class="schedule-shell" id="schedule">
           <nav class="schedule-tabs" aria-label="赛程视图">
-            <a class="active" href="#schedule">时间赛程</a>
-            <a href="#team-feeds">球队赛程</a>
-            <a href="#schedule">小组赛</a>
-            <a href="${escapeHtml(knockoutUrl)}">淘汰赛</a>
-            <a href="#subscribe">日历订阅</a>
+            <button class="active" type="button" data-tab="focus">今日焦点</button>
+            <button type="button" data-tab="teams">球队赛程</button>
+            <button type="button" data-tab="groups">小组积分</button>
+            <button type="button" data-tab="knockout">淘汰赛</button>
+            <button type="button" data-tab="subscribe">日历订阅</button>
           </nav>
-          ${renderSchedule(state.matches)}
+          <nav class="date-picker" aria-label="选择比赛日期">
+            ${renderDatePicker(days, initialDate)}
+          </nav>
+          <div class="schedule-summary" id="schedule-summary">
+            <span>${escapeHtml(initialDay?.label ?? "今日焦点")}</span>
+            <strong>${initialMatches.length} 场焦点赛程</strong>
+          </div>
+          <div id="schedule-panel">
+            ${renderScheduleMatches(initialMatches)}
+          </div>
+          <div class="empty-state" id="empty-state" hidden>这一天暂无比赛。</div>
+          <div class="subscribe-panel-view" id="subscribe-panel-view" hidden>
+            <h2>订阅网络日历，自动同步赛程变化</h2>
+            <p>请使用 webcal 网络订阅，不下载静态 ICS 文件。之后淘汰赛对阵、赛果和时间调整会由后台更新到订阅源。</p>
+            <a class="neon-link" href="${escapeHtml(webcalUrl)}">一键添加到手机日历</a>
+            <button type="button" data-copy="${escapeHtml(webcalUrl)}">复制 webcal 订阅链接</button>
+          </div>
+          <script id="schedule-data" type="application/json">${escapeJsonForHtml(JSON.stringify(clientState))}</script>
         </section>
 
         <section class="bottom-grid">
@@ -125,7 +158,7 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
           <section class="info-card" id="team-feeds">
             <p class="eyebrow">Teams</p>
             <h2>球队订阅</h2>
-            <div class="chips">
+            <div class="chips" id="team-feed-list">
               ${teams.map((feed) => `<a href="${escapeHtml(`${baseUrl}/feeds/teams/${feed.slug}.ics`)}">${escapeHtml(teamDisplayNameZh(feed.team))}</a>`).join("")}
             </div>
           </section>
@@ -270,18 +303,30 @@ function page(title: string, body: string): string {
     .copy-row { display:grid; grid-template-columns:minmax(0, 1fr) 74px; gap:8px; }
     .copy-row input { min-width:0; height:38px; border:1px solid rgba(255,255,255,.13); border-radius:10px; padding:0 10px; color:#cde4d3; background:rgba(0,0,0,.32); font:12px/1.2 "SFMono-Regular", Consolas, monospace; }
     .copy-row button { min-height:38px; border:1px solid rgba(0,255,102,.55); border-radius:10px; background:rgba(0,255,102,.12); color:var(--neon); font-weight:900; cursor:pointer; }
-    .pass-actions { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; margin-top:12px; }
+    .pass-note { margin:10px 0 0; color:#a9bbae; font-size:12px; line-height:1.5; }
+    .pass-actions { display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:8px; margin-top:12px; }
     .pass-actions a { min-height:36px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.13); border-radius:10px; background:rgba(255,255,255,.055); color:#fff; text-decoration:none; font-size:12px; font-weight:900; }
-    .pass-actions a.gold { border-color:transparent; background:linear-gradient(180deg, #f1d988, #c49a35); color:#0a0a05; }
+    .pass-actions .mobile-primary { border-color:transparent; background:linear-gradient(180deg, #00ff66, #00d957); color:#031007; box-shadow:0 0 16px rgba(0,255,102,.18); }
     .schedule-shell { margin-top:18px; }
     .schedule-tabs { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); min-height:50px; margin-bottom:16px; border:1px solid rgba(255,255,255,.09); border-radius:16px; background:rgba(2,8,5,.72); backdrop-filter:blur(14px); overflow:hidden; box-shadow:0 16px 40px rgba(0,0,0,.34); }
-    .schedule-tabs a { display:flex; align-items:center; justify-content:center; color:#f5fff7; text-decoration:none; font-weight:900; border-left:1px solid rgba(255,255,255,.08); }
-    .schedule-tabs a:first-child { border-left:0; }
-    .schedule-tabs a.active { color:#fff; box-shadow:inset 0 -2px 0 var(--gold); background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(212,175,55,.12)); }
+    .schedule-tabs button { appearance:none; border:0; border-left:1px solid rgba(255,255,255,.08); background:transparent; display:flex; align-items:center; justify-content:center; color:#f5fff7; text-decoration:none; font:900 14px/1.2 inherit; cursor:pointer; }
+    .schedule-tabs button:first-child { border-left:0; }
+    .schedule-tabs button.active { color:#fff; box-shadow:inset 0 -2px 0 var(--gold); background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(212,175,55,.12)); }
+    .date-picker { margin:-4px 0 14px; padding:12px 4px; border-bottom:1px solid rgba(255,255,255,.05); overflow-x:auto; scrollbar-width:none; scroll-behavior:smooth; }
+    .date-track { display:flex; align-items:center; gap:10px; min-width:max-content; }
+    .date-item { flex:0 0 auto; width:66px; height:66px; border:1px solid rgba(255,255,255,.08); border-radius:14px; background:rgba(255,255,255,.05); color:#9bad9f; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font:800 12px/1 inherit; cursor:pointer; transition:background .2s ease, color .2s ease, border-color .2s ease; }
+    .date-item:hover { color:#fff; background:rgba(255,255,255,.09); }
+    .date-item.active { border-color:transparent; background:var(--neon); color:#031007; box-shadow:0 0 15px rgba(0,255,102,.30); }
+    .date-item span:first-child { font-size:10px; opacity:.82; }
+    .date-item strong { font:900 14px/1 "SFMono-Regular", Consolas, monospace; }
+    .date-item small { min-height:13px; color:inherit; opacity:.72; font-size:9px; }
+    .schedule-summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:42px; margin-bottom:10px; color:#a8b9ad; font-size:13px; }
+    .schedule-summary strong { color:var(--gold-2); font-size:15px; }
     .day-group { display:grid; grid-template-columns:140px minmax(0, 1fr); gap:0; margin-bottom:10px; }
     .day-heading { padding:18px 16px; border:1px solid rgba(212,175,55,.30); border-right:0; border-radius:14px 0 0 14px; background:rgba(8,24,15,.82); color:var(--gold-2); font-weight:1000; line-height:1.35; }
     .day-heading span { display:block; margin-top:4px; color:#91a79a; font-size:12px; }
     .day-matches { display:grid; gap:8px; }
+    #schedule-panel { display:grid; gap:8px; }
     .match-row { min-height:64px; display:grid; grid-template-columns:92px minmax(0, 1fr) 210px; align-items:center; gap:16px; padding:10px 12px 10px 18px; border:1px solid rgba(255,255,255,.10); border-radius:999px; background:rgba(8,24,15,.66); backdrop-filter:blur(10px); box-shadow:inset 0 0 22px rgba(0,0,0,.25); transition:border-color .2s ease, background .2s ease, transform .2s ease; }
     .match-row:hover { border-color:rgba(0,255,102,.34); background:rgba(10,31,19,.78); transform:translateY(-1px); }
     .match-time { color:#fff; font:900 17px/1 "SFMono-Regular", Consolas, monospace; }
@@ -301,7 +346,17 @@ function page(title: string, body: string): string {
     .status.final { border-color:rgba(212,175,55,.24); background:rgba(0,0,0,.50); color:#e9d083; }
     .match-meta { margin-top:5px; color:#708579; font-size:10px; font-weight:800; }
     .bottom-grid { display:grid; grid-template-columns:360px minmax(0, 1fr); gap:16px; margin-top:22px; }
-    .info-card { border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:18px; background:rgba(5,16,10,.74); backdrop-filter:blur(12px); box-shadow:0 18px 44px rgba(0,0,0,.24); }
+    .info-card, .subscribe-panel-view, .empty-state { border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:18px; background:rgba(5,16,10,.74); backdrop-filter:blur(12px); box-shadow:0 18px 44px rgba(0,0,0,.24); }
+    .empty-state { color:#9fb2a5; text-align:center; }
+    .subscribe-panel-view { display:grid; gap:12px; }
+    .subscribe-panel-view[hidden], .empty-state[hidden] { display:none; }
+    .subscribe-panel-view button { min-height:38px; border:1px solid rgba(0,255,102,.40); border-radius:999px; background:rgba(0,255,102,.12); color:var(--neon); font-weight:900; cursor:pointer; }
+    .group-grid, .team-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
+    .group-card, .team-feed-card { border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:14px; background:rgba(10,26,17,.58); }
+    .group-card h3, .team-feed-card h3 { margin:0 0 10px; color:var(--gold-2); font-size:15px; }
+    .group-card ul { margin:0; padding:0; list-style:none; display:grid; gap:7px; color:#eefcf1; font-size:13px; }
+    .team-feed-card { display:flex; align-items:center; justify-content:space-between; gap:12px; color:#eefcf1; text-decoration:none; font-weight:900; }
+    .team-feed-card span { color:#93a99a; font-size:12px; font-weight:800; }
     .eyebrow { margin:0 0 8px; color:var(--gold-2); text-transform:uppercase; font-size:12px; font-weight:1000; letter-spacing:.08em; }
     .info-card p:not(.eyebrow) { color:#9fb2a5; line-height:1.6; margin:10px 0 14px; }
     .neon-link { min-height:38px; display:inline-flex; align-items:center; padding:0 14px; border-radius:999px; background:rgba(0,255,102,.13); border:1px solid rgba(0,255,102,.36); color:var(--neon); text-decoration:none; font-weight:900; }
@@ -340,7 +395,7 @@ function page(title: string, body: string): string {
       .trophy-block { min-height:auto; border-right:0; border-bottom:1px dashed rgba(255,255,255,.14); padding-bottom:12px; }
       .copy-row, .pass-actions { grid-template-columns:1fr; }
       .schedule-tabs { grid-template-columns:repeat(5, minmax(0, 1fr)); overflow:hidden; }
-      .schedule-tabs a { min-width:0; min-height:46px; padding:0 6px; font-size:12px; }
+      .schedule-tabs button { min-width:0; min-height:46px; padding:0 6px; font-size:12px; }
       .match-row { grid-template-columns:1fr; border-radius:18px; padding:14px; gap:12px; }
       .match-core { grid-template-columns:1fr 78px 1fr; gap:8px; }
       .team { font-size:14px; align-items:flex-start; }
@@ -348,6 +403,7 @@ function page(title: string, body: string): string {
       .match-side { justify-content:space-between; }
       .venue { white-space:normal; }
       .watch-links a { min-height:38px; padding:0 16px; }
+      .group-grid, .team-grid { grid-template-columns:1fr; }
       .grid { grid-template-columns:1fr; }
     }
   </style>
@@ -392,27 +448,215 @@ function page(title: string, body: string): string {
       button.textContent = original;
     }, 1600);
   });
+
+  const scheduleDataEl = document.getElementById("schedule-data");
+  const scheduleData = scheduleDataEl ? JSON.parse(scheduleDataEl.textContent || "{}") : null;
+  const schedulePanel = document.getElementById("schedule-panel");
+  const scheduleSummary = document.getElementById("schedule-summary");
+  const emptyState = document.getElementById("empty-state");
+  const subscribePanelView = document.getElementById("subscribe-panel-view");
+  const datePicker = document.querySelector(".date-picker");
+  let activeTab = "focus";
+  let selectedDate = scheduleData?.selectedDate;
+
+  function text(value) {
+    return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function setTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll("[data-tab]").forEach((item) => item.classList.toggle("active", item.dataset.tab === tab));
+    document.querySelectorAll("[data-tab-link]").forEach((item) => item.classList.toggle("active", item.dataset.tabLink === tab));
+    renderActiveView();
+  }
+
+  function setDate(dateKey) {
+    selectedDate = dateKey;
+    activeTab = "focus";
+    document.querySelectorAll(".date-item").forEach((item) => item.classList.toggle("active", item.dataset.date === dateKey));
+    setTab("focus");
+  }
+
+  function showSubscribePanel(show) {
+    if (!subscribePanelView || !schedulePanel || !emptyState) return;
+    subscribePanelView.hidden = !show;
+    schedulePanel.hidden = show;
+    emptyState.hidden = true;
+  }
+
+  function renderActiveView() {
+    if (!scheduleData || !schedulePanel || !scheduleSummary || !emptyState || !datePicker) return;
+    showSubscribePanel(false);
+    datePicker.hidden = activeTab !== "focus";
+
+    if (activeTab === "focus") {
+      const day = scheduleData.days.find((item) => item.key === selectedDate);
+      const matches = scheduleData.matches.filter((match) => match.dateKey === selectedDate);
+      scheduleSummary.innerHTML =
+        "<span>" + text(day?.label || "今日焦点") + "</span><strong>" + matches.length + " 场焦点赛程</strong>";
+      schedulePanel.innerHTML = matches.map(renderMatch).join("");
+      emptyState.hidden = matches.length > 0;
+      return;
+    }
+
+    if (activeTab === "teams") {
+      scheduleSummary.innerHTML = "<span>球队赛程</span><strong>选择球队专属订阅</strong>";
+      schedulePanel.innerHTML = '<div class="team-grid">' + scheduleData.teams.map(renderTeamFeed).join("") + "</div>";
+      emptyState.hidden = scheduleData.teams.length > 0;
+      return;
+    }
+
+    if (activeTab === "groups") {
+      const groups = groupTeams(scheduleData.matches);
+      scheduleSummary.innerHTML = "<span>小组积分</span><strong>按小组查看球队</strong>";
+      schedulePanel.innerHTML = '<div class="group-grid">' + groups.map(renderGroup).join("") + "</div>";
+      emptyState.hidden = groups.length > 0;
+      return;
+    }
+
+    if (activeTab === "knockout") {
+      const matches = scheduleData.matches.filter((match) => match.stage !== "group");
+      scheduleSummary.innerHTML = "<span>淘汰赛</span><strong>" + matches.length + " 场淘汰赛</strong>";
+      schedulePanel.innerHTML = renderDayGroups(matches);
+      emptyState.hidden = matches.length > 0;
+      return;
+    }
+
+    if (activeTab === "subscribe") {
+      scheduleSummary.innerHTML = "<span>日历订阅</span><strong>webcal 网络动态同步</strong>";
+      datePicker.hidden = true;
+      showSubscribePanel(true);
+    }
+  }
+
+  function renderTeamFeed(feed) {
+    return (
+      '<a class="team-feed-card" href="' +
+      text(feed.path) +
+      '"><strong>' +
+      text(feed.label) +
+      "</strong><span>" +
+      text(feed.matchCount) +
+      " 场</span></a>"
+    );
+  }
+
+  function groupTeams(matches) {
+    const groups = new Map();
+    for (const match of matches) {
+      if (!match.group) continue;
+      if (!groups.has(match.group)) groups.set(match.group, new Set());
+      if (!match.homePlaceholder) groups.get(match.group).add(match.home.name);
+      if (!match.awayPlaceholder) groups.get(match.group).add(match.away.name);
+    }
+    return Array.from(groups.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([group, teams]) => ({ group, teams: Array.from(teams).sort() }));
+  }
+
+  function renderGroup(group) {
+    return (
+      '<article class="group-card"><h3>' +
+      text(group.group) +
+      "</h3><ul>" +
+      group.teams.map((team) => "<li>" + text(team) + "</li>").join("") +
+      "</ul></article>"
+    );
+  }
+
+  function renderDayGroups(matches) {
+    const byDay = new Map();
+    for (const match of matches) {
+      if (!byDay.has(match.dateKey)) byDay.set(match.dateKey, []);
+      byDay.get(match.dateKey).push(match);
+    }
+    return Array.from(byDay.entries())
+      .map(([dateKey, dayMatches]) => {
+        const day = scheduleData.days.find((item) => item.key === dateKey);
+        return (
+          '<section class="day-group"><div class="day-heading">' +
+          text(day?.label || dateKey) +
+          "<span>" +
+          dayMatches.length +
+          ' 场</span></div><div class="day-matches">' +
+          dayMatches.map(renderMatch).join("") +
+          "</div></section>"
+        );
+      })
+      .join("");
+  }
+
+  function renderMatch(match) {
+    return (
+      '<article class="match-row"><div><div class="match-time">' +
+      text(match.time) +
+      '</div><div class="match-no">' +
+      text(match.stageLabel) +
+      " · " +
+      text(match.groupRound) +
+      '</div></div><div class="match-core"><div><div class="team home"><span>' +
+      text(match.home.name) +
+      "</span><span>" +
+      text(match.home.flag) +
+      '</span></div><div class="match-meta">第 ' +
+      text(match.matchNo) +
+      ' 场</div></div><div class="score-box">' +
+      text(match.center) +
+      '</div><div><div class="team away"><span>' +
+      text(match.away.flag) +
+      "</span><span>" +
+      text(match.away.name) +
+      '</span></div><div class="match-meta"><span class="status ' +
+      text(match.status) +
+      '">' +
+      text(match.statusLabel) +
+      '</span></div></div></div><div class="match-side"><span class="venue">' +
+      text(match.venue) +
+      '</span><div class="watch-links" aria-label="直播和回放链接"><a href="' +
+      text(match.cctvUrl) +
+      '" target="_blank" rel="noreferrer">CCTV 5 直播</a></div></div></article>'
+    );
+  }
+
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const tab = event.target.closest("[data-tab]");
+    if (tab) {
+      event.preventDefault();
+      setTab(tab.dataset.tab);
+      return;
+    }
+    const tabLink = event.target.closest("[data-tab-link]");
+    if (tabLink) {
+      event.preventDefault();
+      setTab(tabLink.dataset.tabLink);
+      return;
+    }
+    const dateItem = event.target.closest("[data-date]");
+    if (dateItem) {
+      setDate(dateItem.dataset.date);
+    }
+  });
 </script></body>
 </html>`;
 }
 
-function renderSchedule(matches: Match[]): string {
-  const groups = new Map<string, Match[]>();
-  for (const match of [...matches].sort((a, b) => a.kickoffAtUtc.localeCompare(b.kickoffAtUtc))) {
-    const day = formatBeijingDay(match.kickoffAtUtc);
-    groups.set(day, [...(groups.get(day) ?? []), match]);
-  }
-
-  return [...groups.entries()]
+function renderDatePicker(days: ScheduleDay[], initialDate: string): string {
+  return `<div class="date-track">${days
     .map(
-      ([day, dayMatches]) => `
-        <section class="day-group">
-          <div class="day-heading">${escapeHtml(day)}<span>${dayMatches.length} 场</span></div>
-          <div class="day-matches">${dayMatches.map(renderScheduleMatch).join("")}</div>
-        </section>
+      (day) => `
+        <button class="date-item ${day.key === initialDate ? "active" : ""}" type="button" data-date="${escapeHtml(day.key)}">
+          <span>${escapeHtml(day.shortDate)}</span>
+          <strong>${escapeHtml(day.weekday)}</strong>
+          <small>${escapeHtml(day.badge)}</small>
+        </button>
       `
     )
-    .join("");
+    .join("")}</div>`;
+}
+
+function renderScheduleMatches(matches: Match[]): string {
+  return matches.map(renderScheduleMatch).join("");
 }
 
 function renderScheduleMatch(match: Match): string {
@@ -449,6 +693,76 @@ function renderWatchLinks(match: Match): string {
     `2026世界杯 ${teamNameZh(match.homeTeam)} ${teamNameZh(match.awayTeam)} 直播 回放`
   );
   return `<a href="${escapeHtml(`https://search.cctv.com/search.php?qtext=${query}`)}" target="_blank" rel="noreferrer">CCTV 5 直播</a>`;
+}
+
+interface ScheduleDay {
+  key: string;
+  label: string;
+  shortDate: string;
+  weekday: string;
+  matchCount: number;
+  badge: string;
+}
+
+function scheduleDays(matches: Match[]): ScheduleDay[] {
+  const counts = new Map<string, number>();
+  for (const match of matches) {
+    const key = beijingDateKey(match.kickoffAtUtc);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  return [...counts.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, matchCount]) => {
+      const sample = matches.find((match) => beijingDateKey(match.kickoffAtUtc) === key);
+      const label = sample ? formatBeijingDay(sample.kickoffAtUtc) : key;
+      return {
+        key,
+        label,
+        shortDate: key.slice(5).replace("-", "/"),
+        weekday: sample ? formatBeijingWeekday(sample.kickoffAtUtc) : "",
+        matchCount,
+        badge: `${matchCount}场`
+      };
+    });
+}
+
+function pickInitialDateKey(days: ScheduleDay[]): string {
+  if (days.length === 0) return "";
+  const today = beijingDateKey(new Date().toISOString());
+  return days.find((day) => day.key === today)?.key ?? days[0]?.key ?? "";
+}
+
+function matchesForDate(matches: Match[], dateKey: string): Match[] {
+  return [...matches]
+    .filter((match) => beijingDateKey(match.kickoffAtUtc) === dateKey)
+    .sort((a, b) => a.kickoffAtUtc.localeCompare(b.kickoffAtUtc));
+}
+
+function clientMatch(match: Match) {
+  const display = matchDisplay(match);
+  const query = encodeURIComponent(
+    `2026世界杯 ${teamNameZh(match.homeTeam)} ${teamNameZh(match.awayTeam)} 直播 回放`
+  );
+  return {
+    id: match.id,
+    matchNo: match.matchNo,
+    dateKey: beijingDateKey(match.kickoffAtUtc),
+    time: formatBeijingTime(match.kickoffAtUtc),
+    group: match.group ? groupOrRoundZh(match) : "",
+    groupRound: groupOrRoundZh(match),
+    stage: match.stage,
+    stageLabel: stageZh(match.stage),
+    status: match.status,
+    statusLabel: statusZh(match.status),
+    venue: venueZh(match.venue),
+    home: display.home,
+    away: display.away,
+    homePlaceholder: isPlaceholderTeam(match.homeTeam),
+    awayPlaceholder: isPlaceholderTeam(match.awayTeam),
+    center: display.center,
+    cctvUrl: `https://search.cctv.com/search.php?qtext=${query}`
+  };
 }
 
 function renderLedStat(value: number, label: string, icon: string): string {
@@ -520,6 +834,25 @@ function formatBeijingDay(iso: string): string {
   }).format(new Date(iso));
 }
 
+function formatBeijingWeekday(iso: string): string {
+  return new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    weekday: "short"
+  }).format(new Date(iso));
+}
+
+function beijingDateKey(iso: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date(iso));
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
 function formatBeijingTime(iso: string): string {
   return new Intl.DateTimeFormat("zh-CN", {
     timeZone: "Asia/Shanghai",
@@ -546,4 +879,8 @@ function escapeHtml(value: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function escapeJsonForHtml(value: string): string {
+  return value.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
 }
