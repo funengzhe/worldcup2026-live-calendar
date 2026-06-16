@@ -69,12 +69,24 @@ app.get("/healthz", async (_request, reply) => {
   });
 });
 
-app.get("/assets/img/blank-match-pass.png", async (_request, reply) => {
-  const image = await readFile(`${config.publicDir}/assets/img/blank-match-pass.png`);
-  reply
-    .header("cache-control", "public, max-age=31536000, immutable")
-    .type("image/png")
-    .send(image);
+const imageAssets = new Map([
+  ["2026-chinese-calendar-logo.webp", "image/webp"],
+  ["blank-match-pass.png", "image/png"],
+  ["stadium-bg-mobile.webp", "image/webp"],
+  ["stadium-bg-pc.webp", "image/webp"],
+  ["worldcup-trophy-circle-icon.webp", "image/webp"]
+]);
+
+app.get("/assets/img/:file", async (request, reply) => {
+  const { file } = request.params as { file: string };
+  const mimeType = imageAssets.get(file);
+  if (!mimeType) {
+    reply.code(404).send({ ok: false, error: "Asset not found" });
+    return;
+  }
+
+  const image = await readFile(`${config.publicDir}/assets/img/${file}`);
+  reply.header("cache-control", "public, max-age=31536000, immutable").type(mimeType).send(image);
 });
 
 app.get("/worldcup2026.ics", async (_request, reply) => {

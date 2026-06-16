@@ -53,8 +53,20 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
     `
       <header class="topbar">
         <a class="brand" href="#top" aria-label="2026世界杯赛程首页">
-          <span class="brand-mark">🏆</span>
-          <span><strong>2026世界杯</strong><small>赛程 · 赛果 · 日历订阅</small></span>
+          <img
+            class="brand-icon"
+            src="/assets/img/worldcup-trophy-circle-icon.webp"
+            alt="2026世界杯日历"
+            width="36"
+            height="36"
+          />
+          <img
+            class="brand-logo"
+            src="/assets/img/2026-chinese-calendar-logo.webp"
+            alt="2026世界杯日历官方赛程"
+            width="320"
+            height="80"
+          />
         </a>
         <nav class="topnav" aria-label="主导航">
           <a class="active" href="#schedule" data-tab-link="focus">今日焦点</a>
@@ -239,30 +251,26 @@ function page(title: string, body: string): string {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapeHtml(title)}</title>
+  <link rel="icon" type="image/webp" href="/assets/img/worldcup-trophy-circle-icon.webp" />
+  <meta property="og:image" content="/assets/img/2026-chinese-calendar-logo.webp" />
   <style>
     :root { color-scheme: dark; --ink:#f7fff9; --muted:#94a89a; --line:rgba(255,255,255,.12); --panel:rgba(8,24,15,.72); --panel-strong:rgba(13,35,23,.9); --neon:#00ff66; --gold:#d4af37; --gold-2:#f1d988; --pitch:#07160e; --black:#020805; }
     * { box-sizing: border-box; }
     html { scroll-behavior:smooth; }
-    body { min-width:320px; margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:
-      linear-gradient(180deg, rgba(7,22,14,.78), rgba(4,13,8,.98)),
-      radial-gradient(ellipse at 20% 8%, rgba(255,255,255,.22), transparent 20%),
-      radial-gradient(ellipse at 82% 10%, rgba(255,255,255,.18), transparent 18%),
-      linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px),
-      linear-gradient(180deg, #07160e 0%, #0c2317 46%, #040d08 100%);
-      background-size:auto, auto, auto, 86px 86px, auto; }
-    body::before { content:""; position:fixed; inset:46px 0 auto; height:290px; pointer-events:none; background:
-      linear-gradient(108deg, transparent 0 9%, rgba(255,255,255,.14) 10%, transparent 28%),
-      linear-gradient(252deg, transparent 0 9%, rgba(255,255,255,.12) 10%, transparent 28%);
-      opacity:.65; }
-    body::after { content:""; position:fixed; left:0; right:0; bottom:0; height:48vh; pointer-events:none; background:
-      linear-gradient(90deg, transparent 49.7%, rgba(255,255,255,.12) 50%, transparent 50.3%),
-      linear-gradient(0deg, transparent 82%, rgba(255,255,255,.10) 82.4%, transparent 82.8%);
-      opacity:.28; }
-    .topbar { position:sticky; top:0; z-index:20; max-width:1180px; min-height:58px; margin:0 auto; display:grid; grid-template-columns:220px minmax(0, 1fr) auto; align-items:center; gap:14px; padding:0 18px; border:1px solid rgba(255,255,255,.08); border-top:0; border-radius:0 0 18px 18px; background:rgba(3,10,6,.86); backdrop-filter:blur(16px); box-shadow:0 14px 40px rgba(0,0,0,.45); }
-    .brand { display:flex; align-items:center; gap:10px; color:#fff; text-decoration:none; min-width:0; }
-    .brand-mark { width:30px; height:30px; display:grid; place-items:center; border-radius:50%; background:linear-gradient(180deg, #f3d982, #a87721); color:#111; }
-    .brand strong { display:block; font-size:15px; line-height:1.1; }
-    .brand small { display:block; margin-top:2px; color:var(--muted); font-size:11px; }
+    body { min-width:320px; margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:#040d08; }
+    .site-bg { min-height:100vh; color:#fff; background-image:url("/assets/img/stadium-bg-mobile.webp"); background-size:cover; background-position:center; background-repeat:no-repeat; background-attachment:fixed; }
+    .site-overlay { min-height:100vh; width:100%; padding-bottom:80px; background:linear-gradient(180deg, rgba(0,0,0,.50), rgba(7,22,14,.85) 45%, rgba(4,13,8,.95)); }
+    .topbar { position:sticky; top:0; z-index:20; min-height:62px; margin:0; display:grid; grid-template-columns:240px minmax(0, 1fr) auto; align-items:center; gap:14px; padding:0 max(18px, calc((100vw - 1180px) / 2 + 18px)); border-bottom:1px solid rgba(255,255,255,.06); background:rgba(10,26,17,.70); backdrop-filter:blur(16px); box-shadow:0 14px 40px rgba(0,0,0,.36); }
+    .brand { display:flex; align-items:center; color:#fff; text-decoration:none; min-width:0; }
+    .brand-icon { display:block; width:36px; height:36px; object-fit:contain; filter:drop-shadow(0 0 12px rgba(212,175,55,.32)); animation:brandSpin 30s linear infinite; }
+    .brand-logo { display:none; width:auto; height:34px; max-width:250px; object-fit:contain; filter:drop-shadow(0 0 12px rgba(212,175,55,.22)); transition:transform .2s ease; }
+    .brand:hover .brand-logo { transform:scale(1.01); }
+    @keyframes brandSpin { to { transform:rotate(360deg); } }
+    @media (min-width:768px) {
+      .site-bg { background-image:url("/assets/img/stadium-bg-pc.webp"); }
+      .brand-icon { display:none; }
+      .brand-logo { display:block; }
+    }
     .topnav { height:58px; display:flex; justify-content:center; min-width:0; overflow:auto; scrollbar-width:none; }
     .topnav a { min-width:88px; height:58px; display:inline-flex; align-items:center; justify-content:center; color:#eaf7ef; text-decoration:none; font-weight:800; font-size:14px; border-left:1px solid rgba(255,255,255,.08); }
     .topnav a:last-child { border-right:1px solid rgba(255,255,255,.08); }
@@ -371,7 +379,7 @@ function page(title: string, body: string): string {
     a { color:var(--neon); }
     p { margin:8px 0; line-height:1.55; }
     @media (max-width:980px) {
-      .topbar { grid-template-columns:1fr auto; margin:0 10px; }
+      .topbar { grid-template-columns:1fr auto; padding:0 14px; }
       .topnav { grid-column:1 / -1; order:3; justify-content:flex-start; height:46px; }
       .topnav a { height:46px; min-width:82px; }
       .hero-grid, .bottom-grid { grid-template-columns:1fr; }
@@ -381,9 +389,8 @@ function page(title: string, body: string): string {
       .day-heading span { margin-top:0; }
     }
     @media (max-width:720px) {
-      body::before { height:190px; }
       .shell { padding:26px 12px 46px; }
-      .brand small, .login-pill { display:none; }
+      .login-pill { display:none; }
       .topbar { min-height:54px; }
       .topnav a { min-width:0; flex:1 0 auto; padding:0 8px; font-size:13px; }
       h1 { font-size:46px; }
@@ -411,7 +418,13 @@ function page(title: string, body: string): string {
     }
   </style>
 </head>
-<body>${body}<script>
+<body>
+  <div class="site-bg">
+    <div class="site-overlay">
+      ${body}
+    </div>
+  </div>
+<script>
   async function copyText(value) {
     if (navigator.clipboard && window.isSecureContext) {
       try {
