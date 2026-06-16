@@ -30,7 +30,7 @@ export class JsonStore {
 
   async write(state: AppState): Promise<void> {
     await mkdir(path.dirname(this.statePath), { recursive: true });
-    const tmpPath = `${this.statePath}.tmp`;
+    const tmpPath = `${this.statePath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
     await writeFile(tmpPath, `${JSON.stringify(state, null, 2)}\n`);
     await rename(tmpPath, this.statePath);
   }
