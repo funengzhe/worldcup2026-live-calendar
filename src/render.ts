@@ -86,27 +86,31 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
           </div>
 
           <section class="match-pass" aria-label="赛程订阅通行证">
-            <span class="ticket-cut left"></span>
-            <span class="ticket-cut right"></span>
-            <div class="pass-top">
-              <div>
+            <div class="pass-art">
+              <div class="pass-title">
                 <p>FIFA WORLD CUP 2026™</p>
                 <h2>MATCH PASS</h2>
               </div>
-              <div class="barcode" aria-hidden="true">|||||||||<br />26WC-2026-00001</div>
-            </div>
-            <div class="pass-body">
-              <div class="trophy-block">
-                <span>🏆</span>
-                <strong>2026<br />WORLD CUP</strong>
-                <small>USA / CANADA / MEXICO</small>
+              <div class="pass-qr-slot">
+                <div class="qr" aria-label="订阅二维码">
+                  ${qrSvg}
+                  <span class="qr-scan" aria-hidden="true"></span>
+                </div>
               </div>
-              <div class="qr-wrap">
-                <div class="qr" aria-label="订阅二维码">${qrSvg}</div>
-                <p>Scan to Subscribe</p>
+              <div class="pass-badge">
+                <strong>2026</strong>
+                <span>世界杯</span>
+                <small>赛程通行证</small>
               </div>
+              <div class="pass-info">
+                <strong>日历订阅</strong>
+                <span>赛果自动更新</span>
+                <span>北京时间汉化</span>
+                <span>手机无感同步</span>
+              </div>
+              <div class="pass-live-tag" aria-label="实时源状态">LIVE SRC</div>
             </div>
-            <div class="copy-row">
+            <div class="copy-row pass-copy">
               <input readonly value="${escapeHtml(webcalUrl)}" aria-label="订阅地址" />
               <button type="button" data-copy="${escapeHtml(webcalUrl)}">复制</button>
             </div>
@@ -278,29 +282,28 @@ function page(title: string, body: string): string {
     .led-stat strong { font-family:"SFMono-Regular", Consolas, "Liberation Mono", monospace; color:var(--neon); font-size:clamp(34px, 4vw, 48px); line-height:1; letter-spacing:1px; text-shadow:0 0 9px rgba(0,255,102,.5), 0 0 24px rgba(0,255,102,.20); }
     .led-stat span { margin-top:9px; color:#9eb2a4; font-size:13px; font-weight:800; }
     .led-icon { margin-top:8px; color:rgba(255,255,255,.56); font-size:18px; }
-    .match-pass { position:relative; min-height:310px; padding:22px; border-radius:22px; border:1px solid rgba(212,175,55,.42); border-right:5px solid var(--gold); background:
-      linear-gradient(135deg, rgba(255,255,255,.08), transparent 22%),
-      repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 9px),
-      linear-gradient(180deg, rgba(25,36,29,.96), rgba(10,20,14,.98));
-      box-shadow:0 24px 70px rgba(0,0,0,.58), inset 0 0 38px rgba(212,175,55,.08); overflow:hidden; }
-    .match-pass::before { content:""; position:absolute; inset:10px; border-radius:18px; border:1px solid rgba(255,255,255,.08); pointer-events:none; }
-    .ticket-cut { position:absolute; top:50%; width:22px; height:44px; background:#06110b; border:1px solid rgba(212,175,55,.22); transform:translateY(-50%); z-index:2; }
-    .ticket-cut.left { left:-1px; border-left:0; border-radius:0 999px 999px 0; }
-    .ticket-cut.right { right:-1px; border-right:0; border-radius:999px 0 0 999px; }
-    .pass-top { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; padding-bottom:14px; border-bottom:1px dashed rgba(255,255,255,.16); }
-    .pass-top p { margin:0 0 3px; color:var(--gold-2); font-size:11px; font-weight:900; letter-spacing:.08em; }
-    .pass-top h2 { color:#fff; font-size:24px; letter-spacing:.02em; font-weight:1000; }
-    .barcode { color:#bbc4bb; opacity:.85; font:700 11px/1.25 "SFMono-Regular", Consolas, monospace; text-align:right; }
-    .pass-body { display:grid; grid-template-columns:118px minmax(0, 1fr); gap:16px; align-items:center; padding:16px 0; }
-    .trophy-block { min-height:168px; display:flex; flex-direction:column; justify-content:center; align-items:center; border-right:1px dashed rgba(255,255,255,.14); color:#f5df92; text-align:center; }
-    .trophy-block span { font-size:48px; filter:drop-shadow(0 0 12px rgba(212,175,55,.35)); }
-    .trophy-block strong { margin-top:8px; font-size:15px; line-height:1.1; }
-    .trophy-block small { margin-top:8px; color:#8fa095; font-size:9px; }
-    .qr-wrap { display:grid; justify-items:center; gap:10px; }
-    .qr { width:168px; height:168px; padding:10px; border:2px solid var(--neon); border-radius:15px; background:#fff; box-shadow:0 0 16px rgba(0,255,102,.40), inset 0 0 0 1px rgba(0,0,0,.08); }
+    .match-pass { position:relative; display:grid; align-content:start; gap:10px; max-width:520px; justify-self:center; width:100%; }
+    .pass-art { position:relative; width:100%; aspect-ratio:4 / 3; background:url("/assets/img/blank-match-pass.png") center / contain no-repeat; filter:drop-shadow(0 28px 58px rgba(0,0,0,.62)); isolation:isolate; }
+    .pass-title { position:absolute; top:18.2%; left:18.4%; width:22%; text-align:left; text-shadow:0 0 10px rgba(0,0,0,.8); }
+    .pass-title p { margin:0 0 2px; color:rgba(245,218,142,.88); font-size:clamp(7px, 1vw, 10px); font-weight:1000; letter-spacing:.04em; line-height:1.1; }
+    .pass-title h2 { margin:0; color:#fff7d8; font-size:clamp(12px, 2vw, 19px); font-weight:1000; line-height:.95; letter-spacing:0; }
+    .pass-qr-slot { position:absolute; top:37.2%; left:35.7%; width:28.4%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; }
+    .qr { position:relative; width:82%; height:82%; padding:4%; border-radius:6px; background:#fff; box-shadow:0 0 18px rgba(0,255,102,.42), 0 0 0 1px rgba(255,255,255,.28); overflow:hidden; }
     .qr svg { width:100%; height:100%; display:block; }
-    .qr-wrap p { margin:0; color:var(--neon); font-size:12px; font-weight:900; letter-spacing:.08em; text-shadow:0 0 8px rgba(0,255,102,.34); }
+    .qr-scan { position:absolute; inset:0; border:1px solid rgba(0,255,102,.45); border-radius:6px; pointer-events:none; animation:qrPulse 1.9s ease-in-out infinite; }
+    .pass-badge { position:absolute; bottom:20.2%; left:15.2%; width:16.7%; height:15.2%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; text-shadow:0 0 12px rgba(0,0,0,.85); }
+    .pass-badge strong { color:#d4af37; font-size:clamp(14px, 2.4vw, 26px); font-weight:1000; line-height:.92; }
+    .pass-badge span { margin-top:3px; color:#eaf6eb; font-size:clamp(8px, 1.2vw, 12px); font-weight:1000; line-height:1; }
+    .pass-badge small { margin-top:3px; color:#91a89a; font-size:clamp(6px, .9vw, 9px); font-weight:900; line-height:1; }
+    .pass-info { position:absolute; top:36%; right:12.6%; width:20.6%; min-height:22%; display:flex; flex-direction:column; justify-content:center; gap:3px; text-align:left; text-shadow:0 0 12px rgba(0,0,0,.9); }
+    .pass-info strong { margin-bottom:2px; color:#d4af37; font-size:clamp(11px, 1.55vw, 18px); font-weight:1000; line-height:1; }
+    .pass-info span { position:relative; color:#dce9dd; font-size:clamp(7px, 1.02vw, 11px); font-weight:900; line-height:1.25; padding-left:10px; }
+    .pass-info span::before { content:""; position:absolute; left:0; top:.42em; width:4px; height:4px; border-radius:999px; background:var(--neon); box-shadow:0 0 8px rgba(0,255,102,.75); }
+    .pass-live-tag { position:absolute; bottom:20.1%; right:12.5%; width:20.2%; height:7.3%; display:flex; align-items:center; justify-content:center; color:var(--neon); font:1000 clamp(8px, 1.15vw, 12px)/1 "SFMono-Regular", Consolas, monospace; letter-spacing:.12em; text-shadow:0 0 10px rgba(0,255,102,.7); animation:livePulse 1.8s ease-in-out infinite; }
+    @keyframes qrPulse { 0%, 100% { opacity:.52; box-shadow:inset 0 0 0 rgba(0,255,102,0); } 50% { opacity:1; box-shadow:inset 0 0 18px rgba(0,255,102,.28); } }
+    @keyframes livePulse { 0%, 100% { opacity:.72; } 50% { opacity:1; } }
     .copy-row { display:grid; grid-template-columns:minmax(0, 1fr) 74px; gap:8px; }
+    .pass-copy { margin:0 6% 0; }
     .copy-row input { min-width:0; height:38px; border:1px solid rgba(255,255,255,.13); border-radius:10px; padding:0 10px; color:#cde4d3; background:rgba(0,0,0,.32); font:12px/1.2 "SFMono-Regular", Consolas, monospace; }
     .copy-row button { min-height:38px; border:1px solid rgba(0,255,102,.55); border-radius:10px; background:rgba(0,255,102,.12); color:var(--neon); font-weight:900; cursor:pointer; }
     .pass-note { margin:10px 0 0; color:#a9bbae; font-size:12px; line-height:1.5; }
@@ -390,9 +393,9 @@ function page(title: string, body: string): string {
       .led-stat { min-height:98px; border-top:1px solid rgba(255,255,255,.08); }
       .led-stat:nth-child(-n+2) { border-top:0; }
       .led-stat:nth-child(odd) { border-left:0; }
-      .match-pass { padding:16px; border-radius:18px; }
-      .pass-body { grid-template-columns:1fr; }
-      .trophy-block { min-height:auto; border-right:0; border-bottom:1px dashed rgba(255,255,255,.14); padding-bottom:12px; }
+      .match-pass { max-width:100%; }
+      .pass-art { margin:0 -6px; width:calc(100% + 12px); }
+      .pass-copy { margin:0; }
       .copy-row, .pass-actions { grid-template-columns:1fr; }
       .schedule-tabs { grid-template-columns:repeat(5, minmax(0, 1fr)); overflow:hidden; }
       .schedule-tabs button { min-width:0; min-height:46px; padding:0 6px; font-size:12px; }

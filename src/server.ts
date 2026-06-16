@@ -69,6 +69,14 @@ app.get("/healthz", async (_request, reply) => {
   });
 });
 
+app.get("/assets/img/blank-match-pass.png", async (_request, reply) => {
+  const image = await readFile(`${config.publicDir}/assets/img/blank-match-pass.png`);
+  reply
+    .header("cache-control", "public, max-age=31536000, immutable")
+    .type("image/png")
+    .send(image);
+});
+
 app.get("/worldcup2026.ics", async (_request, reply) => {
   try {
     const ics = await readFile(config.calendarPath, "utf8");
