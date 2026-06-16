@@ -45,7 +45,10 @@ describe("renderHome", () => {
     expect(html).toContain('data-copy="webcal://example.com/worldcup2026.ics"');
     expect(html).toContain("墨西哥");
     expect(html).toContain("南非");
+    expect(html).toContain("score-stack");
+    expect(html).toContain("team-flag");
     expect(html).toContain("CCTV 5 直播");
+    expect(html).not.toContain("小组积分");
     expect(html).not.toContain("下载 ICS");
   });
 });

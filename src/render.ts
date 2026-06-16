@@ -71,7 +71,6 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
         <nav class="topnav" aria-label="主导航">
           <a class="active" href="#schedule" data-tab-link="focus">今日焦点</a>
           <a href="#team-feeds" data-tab-link="teams">球队赛程</a>
-          <a href="#schedule" data-tab-link="groups">小组积分</a>
           <a href="#schedule" data-tab-link="knockout">淘汰赛</a>
           <a href="#schedule" data-tab-link="subscribe">日历订阅</a>
         </nav>
@@ -139,7 +138,6 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
           <nav class="schedule-tabs" aria-label="赛程视图">
             <button class="active" type="button" data-tab="focus">今日焦点</button>
             <button type="button" data-tab="teams">球队赛程</button>
-            <button type="button" data-tab="groups">小组积分</button>
             <button type="button" data-tab="knockout">淘汰赛</button>
             <button type="button" data-tab="subscribe">日历订阅</button>
           </nav>
@@ -352,7 +350,7 @@ function page(title: string, body: string): string {
     .pass-actions a { min-height:36px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.13); border-radius:10px; background:rgba(255,255,255,.055); color:#fff; text-decoration:none; font-size:12px; font-weight:900; }
     .pass-actions .mobile-primary { border-color:transparent; background:linear-gradient(180deg, #00ff66, #00d957); color:#031007; box-shadow:0 0 16px rgba(0,255,102,.18); }
     .schedule-shell { margin-top:18px; }
-    .schedule-tabs { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); min-height:50px; margin-bottom:16px; border:1px solid rgba(255,255,255,.09); border-radius:16px; background:rgba(2,8,5,.72); backdrop-filter:blur(14px); overflow:hidden; box-shadow:0 16px 40px rgba(0,0,0,.34); }
+    .schedule-tabs { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); min-height:50px; margin-bottom:16px; border:1px solid rgba(255,255,255,.09); border-radius:16px; background:rgba(2,8,5,.72); backdrop-filter:blur(14px); overflow:hidden; box-shadow:0 16px 40px rgba(0,0,0,.34); }
     .schedule-tabs button { appearance:none; border:0; border-left:1px solid rgba(255,255,255,.08); background:transparent; display:flex; align-items:center; justify-content:center; color:#f5fff7; text-decoration:none; font:900 14px/1.2 inherit; cursor:pointer; }
     .schedule-tabs button:first-child { border-left:0; }
     .schedule-tabs button.active { color:#fff; box-shadow:inset 0 -2px 0 var(--gold); background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(212,175,55,.12)); }
@@ -376,17 +374,20 @@ function page(title: string, body: string): string {
     .match-row:hover { border-color:rgba(0,255,102,.34); background:rgba(10,31,19,.78); transform:translateY(-1px); }
     .match-time { color:#fff; font:900 17px/1 "SFMono-Regular", Consolas, monospace; }
     .match-no { margin-top:5px; color:#82978a; font-size:10px; font-weight:800; }
-    .match-core { min-width:0; display:grid; grid-template-columns:minmax(120px, 1fr) 82px minmax(120px, 1fr); gap:14px; align-items:center; }
-    .team { min-width:0; display:flex; align-items:center; gap:9px; color:#f8fff9; font-size:15px; font-weight:900; }
+    .match-core { min-width:0; display:grid; grid-template-columns:minmax(150px, 1fr) 92px minmax(150px, 1fr); gap:14px; align-items:center; }
+    .team { min-width:0; display:flex; align-items:center; gap:10px; color:#f8fff9; font-size:16px; font-weight:1000; }
     .team.home { justify-content:flex-end; text-align:right; }
     .team.away { justify-content:flex-start; }
+    .team-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .team-flag { flex:0 0 auto; min-width:44px; height:30px; display:inline-flex; align-items:center; justify-content:center; border-radius:5px; background:rgba(255,255,255,.08); box-shadow:0 0 0 1px rgba(255,255,255,.16), 0 7px 14px rgba(0,0,0,.24); font-size:28px; line-height:1; }
+    .score-stack { min-width:0; display:grid; justify-items:center; gap:7px; }
     .score-box { min-height:32px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.13); border-radius:999px; background:rgba(0,0,0,.38); color:var(--neon); font:1000 17px/1 "SFMono-Regular", Consolas, monospace; letter-spacing:.08em; text-shadow:0 0 8px rgba(0,255,102,.32); }
     .match-side { display:flex; justify-content:flex-end; align-items:center; gap:12px; min-width:0; }
     .venue { min-width:0; color:#93a99a; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .watch-links { display:flex; justify-content:flex-end; }
     .watch-links a { min-height:34px; display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:0 14px; border:1px solid rgba(0,255,102,.36); border-radius:999px; background:rgba(0,255,102,.14); color:#031007; background-color:var(--neon); text-decoration:none; font-size:12px; font-weight:1000; box-shadow:0 0 12px rgba(0,255,102,.20); }
     .watch-links a::before { content:"▶"; font-size:10px; }
-    .status { display:inline-flex; align-items:center; min-height:22px; padding:0 8px; border-radius:999px; font-size:11px; font-weight:900; border:1px solid rgba(255,255,255,.12); color:#b7c8bc; background:rgba(255,255,255,.06); }
+    .status { display:inline-flex; align-items:center; justify-content:center; min-height:22px; padding:0 8px; border-radius:999px; font-size:11px; font-weight:900; border:1px solid rgba(255,255,255,.12); color:#b7c8bc; background:rgba(255,255,255,.06); white-space:nowrap; }
     .status.live, .status.halftime { border-color:rgba(255,55,55,.65); background:#e33d3d; color:#fff; }
     .status.final { border-color:rgba(212,175,55,.24); background:rgba(0,0,0,.50); color:#e9d083; }
     .match-meta { margin-top:5px; color:#708579; font-size:10px; font-weight:800; }
@@ -411,10 +412,9 @@ function page(title: string, body: string): string {
     .site-footer p { margin:8px 0 0; color:#9fb2a5; font-size:13px; line-height:1.6; }
     .site-footer a { color:var(--neon); text-decoration:none; font-weight:900; overflow-wrap:anywhere; }
     .footer-disclaimer { grid-column:1 / -1; padding-top:12px; border-top:1px solid rgba(255,255,255,.08); color:#84978b; font-size:12px; line-height:1.7; }
-    .group-grid, .team-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
-    .group-card, .team-feed-card { border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:14px; background:rgba(10,26,17,.58); }
-    .group-card h3, .team-feed-card h3 { margin:0 0 10px; color:var(--gold-2); font-size:15px; }
-    .group-card ul { margin:0; padding:0; list-style:none; display:grid; gap:7px; color:#eefcf1; font-size:13px; }
+    .team-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
+    .team-feed-card { border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:14px; background:rgba(10,26,17,.58); }
+    .team-feed-card h3 { margin:0 0 10px; color:var(--gold-2); font-size:15px; }
     .team-feed-card { display:flex; align-items:center; justify-content:space-between; gap:12px; color:#eefcf1; text-decoration:none; font-weight:900; }
     .team-feed-card span { color:#93a99a; font-size:12px; font-weight:800; }
     .eyebrow { margin:0 0 8px; color:var(--gold-2); text-transform:uppercase; font-size:12px; font-weight:1000; letter-spacing:.08em; }
@@ -455,16 +455,18 @@ function page(title: string, body: string): string {
       .pass-art { margin:0 -6px; width:calc(100% + 12px); }
       .pass-copy { margin:0; }
       .copy-row, .pass-actions { grid-template-columns:1fr; }
-      .schedule-tabs { grid-template-columns:repeat(5, minmax(0, 1fr)); overflow:hidden; }
+      .schedule-tabs { grid-template-columns:repeat(4, minmax(0, 1fr)); overflow:hidden; }
       .schedule-tabs button { min-width:0; min-height:46px; padding:0 6px; font-size:12px; }
       .match-row { grid-template-columns:1fr; border-radius:18px; padding:14px; gap:12px; }
-      .match-core { grid-template-columns:1fr 78px 1fr; gap:8px; }
-      .team { font-size:14px; align-items:flex-start; }
+      .match-core { grid-template-columns:minmax(0, 1fr) 86px minmax(0, 1fr); gap:9px; }
+      .team { gap:7px; font-size:15px; align-items:center; }
+      .team-name { white-space:normal; line-height:1.25; }
+      .team-flag { min-width:36px; height:25px; border-radius:4px; font-size:23px; }
       .team.home { justify-content:flex-end; }
       .match-side { justify-content:space-between; }
       .venue { white-space:normal; }
       .watch-links a { min-height:38px; padding:0 16px; }
-      .group-grid, .team-grid { grid-template-columns:1fr; }
+      .team-grid { grid-template-columns:1fr; }
       .subscribe-hero { display:grid; }
       .sync-badge { width:64px; height:64px; font-size:15px; }
       .subscribe-features { grid-template-columns:1fr; }
@@ -578,14 +580,6 @@ function page(title: string, body: string): string {
       return;
     }
 
-    if (activeTab === "groups") {
-      const groups = groupTeams(scheduleData.matches);
-      scheduleSummary.innerHTML = "<span>小组积分</span><strong>按小组查看球队</strong>";
-      schedulePanel.innerHTML = '<div class="group-grid">' + groups.map(renderGroup).join("") + "</div>";
-      emptyState.hidden = groups.length > 0;
-      return;
-    }
-
     if (activeTab === "knockout") {
       const matches = scheduleData.matches.filter((match) => match.stage !== "group");
       scheduleSummary.innerHTML = "<span>淘汰赛</span><strong>" + matches.length + " 场淘汰赛</strong>";
@@ -610,29 +604,6 @@ function page(title: string, body: string): string {
       "</strong><span>" +
       text(feed.matchCount) +
       " 场</span></a>"
-    );
-  }
-
-  function groupTeams(matches) {
-    const groups = new Map();
-    for (const match of matches) {
-      if (!match.group) continue;
-      if (!groups.has(match.group)) groups.set(match.group, new Set());
-      if (!match.homePlaceholder) groups.get(match.group).add(match.home.name);
-      if (!match.awayPlaceholder) groups.get(match.group).add(match.away.name);
-    }
-    return Array.from(groups.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([group, teams]) => ({ group, teams: Array.from(teams).sort() }));
-  }
-
-  function renderGroup(group) {
-    return (
-      '<article class="group-card"><h3>' +
-      text(group.group) +
-      "</h3><ul>" +
-      group.teams.map((team) => "<li>" + text(team) + "</li>").join("") +
-      "</ul></article>"
     );
   }
 
@@ -666,22 +637,22 @@ function page(title: string, body: string): string {
       text(match.stageLabel) +
       " · " +
       text(match.groupRound) +
-      '</div></div><div class="match-core"><div><div class="team home"><span>' +
+      '</div></div><div class="match-core"><div><div class="team home"><span class="team-name">' +
       text(match.home.name) +
-      "</span><span>" +
+      '</span><span class="team-flag" aria-hidden="true">' +
       text(match.home.flag) +
       '</span></div><div class="match-meta">第 ' +
       text(match.matchNo) +
-      ' 场</div></div><div class="score-box">' +
+      ' 场</div></div><div class="score-stack"><div class="score-box">' +
       text(match.center) +
-      '</div><div><div class="team away"><span>' +
-      text(match.away.flag) +
-      "</span><span>" +
-      text(match.away.name) +
-      '</span></div><div class="match-meta"><span class="status ' +
+      '</div><span class="status ' +
       text(match.status) +
       '">' +
       text(match.statusLabel) +
+      '</span></div><div><div class="team away"><span class="team-flag" aria-hidden="true">' +
+      text(match.away.flag) +
+      '</span><span class="team-name">' +
+      text(match.away.name) +
       '</span></div></div></div><div class="match-side"><span class="venue">' +
       text(match.venue) +
       '</span><div class="watch-links" aria-label="直播和回放链接"><a href="' +
@@ -741,13 +712,15 @@ function renderScheduleMatch(match: Match): string {
       </div>
       <div class="match-core">
         <div>
-          <div class="team home"><span>${escapeHtml(matchup.home.name)}</span><span>${escapeHtml(matchup.home.flag)}</span></div>
+          <div class="team home"><span class="team-name">${escapeHtml(matchup.home.name)}</span><span class="team-flag" aria-hidden="true">${escapeHtml(matchup.home.flag)}</span></div>
           <div class="match-meta">第 ${match.matchNo} 场</div>
         </div>
-        <div class="score-box">${escapeHtml(matchup.center)}</div>
+        <div class="score-stack">
+          <div class="score-box">${escapeHtml(matchup.center)}</div>
+          <span class="status ${escapeHtml(match.status)}">${escapeHtml(statusZh(match.status))}</span>
+        </div>
         <div>
-          <div class="team away"><span>${escapeHtml(matchup.away.flag)}</span><span>${escapeHtml(matchup.away.name)}</span></div>
-          <div class="match-meta"><span class="status ${escapeHtml(match.status)}">${escapeHtml(statusZh(match.status))}</span></div>
+          <div class="team away"><span class="team-flag" aria-hidden="true">${escapeHtml(matchup.away.flag)}</span><span class="team-name">${escapeHtml(matchup.away.name)}</span></div>
         </div>
       </div>
       <div class="match-side">
