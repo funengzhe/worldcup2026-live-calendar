@@ -108,6 +108,20 @@ app.post("/api/v1/alipay/notify", async (request, reply) => {
   reply.type("text/plain").send("success");
 });
 
+app.get("/api/v1/alipay/notify", async (_request, reply) => {
+  reply.send({
+    ok: true,
+    message: "Alipay notify endpoint is ready. Payment notifications must use POST."
+  });
+});
+
+app.get("/api/v1/alipay/auth/callback", async (_request, reply) => {
+  reply.send({
+    ok: true,
+    message: "Alipay auth callback endpoint is reserved."
+  });
+});
+
 app.get("/metrics", async (_request, reply) => {
   const state = await store.read();
   reply.type("text/plain; version=0.0.4; charset=utf-8").send(renderPrometheusMetrics(state));

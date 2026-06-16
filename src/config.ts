@@ -1,4 +1,5 @@
 import path from "node:path";
+import "dotenv/config";
 import { z } from "zod";
 
 const optionalUrl = z.preprocess(

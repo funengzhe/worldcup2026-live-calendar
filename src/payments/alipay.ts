@@ -76,18 +76,38 @@ export function verifyAlipayNotify(config: AppConfig, payload: Record<string, un
 }
 
 function createAlipaySdk(config: AppConfig): AlipaySdk {
+  const privateKey = normalizePem(config.ALIPAY_PRIVATE_KEY ?? "", "RSA PRIVATE KEY");
   return new AlipaySdk({
     appId: config.ALIPAY_APP_ID ?? "",
-    privateKey: normalizePem(config.ALIPAY_PRIVATE_KEY ?? ""),
-    alipayPublicKey: normalizePem(config.ALIPAY_PUBLIC_KEY ?? ""),
+    privateKey: stripPem(privateKey),
+    alipayPublicKey: stripPem(normalizePem(config.ALIPAY_PUBLIC_KEY ?? "", "PUBLIC KEY")),
     gateway: config.ALIPAY_GATEWAY,
     signType: "RSA2",
-    camelcase: true
+    camelcase: true,
+    keyType: privateKey.includes("BEGIN PRIVATE KEY") ? "PKCS8" : "PKCS1"
   });
 }
 
-function normalizePem(value: string): string {
-  return value.replace(/\\n/g, "\n").trim();
+export function normalizePem(
+  value: string,
+  type: "RSA PRIVATE KEY" | "PRIVATE KEY" | "PUBLIC KEY"
+): string {
+  const normalized = value.replace(/\\n/g, "\n").trim();
+  if (!normalized || normalized.includes("-----BEGIN")) return normalized;
+
+  const body =
+    normalized
+      .replace(/\s+/g, "")
+      .match(/.{1,64}/g)
+      ?.join("\n") ?? normalized;
+  return `-----BEGIN ${type}-----\n${body}\n-----END ${type}-----`;
+}
+
+function stripPem(value: string): string {
+  return value
+    .replace(/-----BEGIN [^-]+-----/g, "")
+    .replace(/-----END [^-]+-----/g, "")
+    .replace(/\s+/g, "");
 }
 
 function isMobileUserAgent(userAgent = ""): boolean {
