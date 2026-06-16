@@ -41,6 +41,7 @@ export interface Match {
 export interface ProviderStatus {
   name: string;
   ok: boolean;
+  required?: boolean;
   lastCheckedAt?: string;
   lastSuccessAt?: string;
   message?: string;

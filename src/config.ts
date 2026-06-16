@@ -21,6 +21,10 @@ const EnvSchema = z.object({
   PRIMARY_SCORE_PROVIDER_API_KEY: z.string().optional(),
   SECONDARY_SCORE_PROVIDER: z.string().default("mock"),
   SECONDARY_SCORE_PROVIDER_API_KEY: z.string().optional(),
+  API_FOOTBALL_BASE_URL: z.string().url().default("https://v3.football.api-sports.io"),
+  API_FOOTBALL_API_KEY: z.string().optional(),
+  API_FOOTBALL_LEAGUE_ID: z.coerce.number().int().positive().default(1),
+  API_FOOTBALL_SEASON: z.coerce.number().int().positive().default(2026),
   ALERT_WEBHOOK_URL: z.string().optional()
 });
 

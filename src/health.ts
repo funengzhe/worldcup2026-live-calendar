@@ -37,9 +37,10 @@ export function checkHealth(state: AppState, config: AppConfig, now = new Date()
     ...state.providers.map((provider) => ({
       name: `provider:${provider.name}`,
       ok:
-        provider.ok &&
-        Boolean(provider.lastSuccessAt) &&
-        ageMs(provider.lastSuccessAt, now) <= config.HEALTH_PROVIDER_STALE_MS,
+        !provider.required ||
+        (provider.ok &&
+          Boolean(provider.lastSuccessAt) &&
+          ageMs(provider.lastSuccessAt, now) <= config.HEALTH_PROVIDER_STALE_MS),
       message: provider.ok
         ? `last success ${provider.lastSuccessAt ?? "never"}`
         : provider.message ?? "provider failed"

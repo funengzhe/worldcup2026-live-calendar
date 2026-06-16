@@ -73,7 +73,21 @@ APP_DIR=/path/to/app scripts/restore-runtime.sh /path/to/backups/20260616T000000
 - `OPENFOOTBALL_URL`
 - `SCHEDULE_SYNC_INTERVAL_MS`
 - `PRIMARY_SCORE_PROVIDER`
+- `API_FOOTBALL_API_KEY`
 - `ALERT_WEBHOOK_URL`
+
+### 启用 API-Football 主比分源
+
+API-Football 的 2026 世界杯参数是 `league=1`、`season=2026`。把生产环境 `.env` 配成：
+
+```bash
+PRIMARY_SCORE_PROVIDER=api-football
+API_FOOTBALL_API_KEY=<your-api-football-key>
+API_FOOTBALL_LEAGUE_ID=1
+API_FOOTBALL_SEASON=2026
+```
+
+没有配置 key 时，默认仍使用 ESPN 备源运行，不会把公开服务打红。
 
 ## 安全
 

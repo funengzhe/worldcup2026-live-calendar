@@ -1,9 +1,11 @@
 import type { AppConfig } from "./config.js";
 import { publishIcs } from "./calendar.js";
 import { fetchOpenFootballMatches, normalizeOpenFootballMatches } from "./openfootball.js";
+import { fetchApiFootballUpdates } from "./providers/apiFootball.js";
 import { fetchEspnUpdates } from "./providers/espn.js";
 import { applyScoreUpdates } from "./providers/resolver.js";
 import { JsonStore, mergeMatches, setPublication, upsertProviderStatus } from "./store.js";
+import type { ScoreUpdate } from "./types.js";
 
 export async function syncSchedule(config: AppConfig, store: JsonStore) {
   const checkedAt = new Date().toISOString();
@@ -62,15 +64,47 @@ export async function syncScores(config: AppConfig, store: JsonStore) {
     await syncSchedule(config, store);
   }
 
+  const updates: ScoreUpdate[] = [];
+  const primary = config.PRIMARY_SCORE_PROVIDER.toLowerCase();
+
+  if (primary === "api-football") {
+    try {
+      const apiFootballUpdates = await fetchApiFootballUpdates(config);
+      updates.push(...apiFootballUpdates);
+      await store.update((current) =>
+        upsertProviderStatus(current, {
+          name: "api-football",
+          ok: true,
+          required: true,
+          lastCheckedAt: checkedAt,
+          lastSuccessAt: checkedAt,
+          message: `${apiFootballUpdates.length} updates loaded`
+        })
+      );
+    } catch (error) {
+      await store.update((current) =>
+        upsertProviderStatus(current, {
+          name: "api-football",
+          ok: false,
+          required: true,
+          lastCheckedAt: checkedAt,
+          message: error instanceof Error ? error.message : String(error)
+        })
+      );
+    }
+  }
+
   try {
-    const updates = await fetchEspnUpdates((await store.read()).matches);
+    const espnUpdates = await fetchEspnUpdates((await store.read()).matches);
+    updates.push(...espnUpdates);
     const next = await store.update((current) =>
       upsertProviderStatus(applyScoreUpdates(current, updates), {
         name: "espn",
         ok: true,
+        required: primary !== "api-football",
         lastCheckedAt: checkedAt,
         lastSuccessAt: checkedAt,
-        message: `${updates.length} updates loaded`
+        message: `${espnUpdates.length} updates loaded`
       })
     );
     return next;
@@ -79,10 +113,14 @@ export async function syncScores(config: AppConfig, store: JsonStore) {
       upsertProviderStatus(current, {
         name: "espn",
         ok: false,
+        required: primary !== "api-football",
         lastCheckedAt: checkedAt,
         message: error instanceof Error ? error.message : String(error)
       })
     );
+    if (updates.length > 0) {
+      return store.update((current) => applyScoreUpdates(current, updates));
+    }
     throw error;
   }
 }
