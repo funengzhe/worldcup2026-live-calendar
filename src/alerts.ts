@@ -2,9 +2,16 @@ import type { AppConfig } from "./config.js";
 
 const lastSentAt = new Map<string, number>();
 
+interface AlertEvent {
+  key: string;
+  title: string;
+  message: string;
+  severity?: "warning" | "critical";
+}
+
 export async function sendAlert(
   config: AppConfig,
-  event: { key: string; title: string; message: string; severity?: "warning" | "critical" }
+  event: AlertEvent
 ): Promise<void> {
   if (!config.ALERT_WEBHOOK_URL) return;
 
@@ -13,13 +20,7 @@ export async function sendAlert(
   if (now - last < 5 * 60 * 1000) return;
   lastSentAt.set(event.key, now);
 
-  const payload = {
-    title: event.title,
-    severity: event.severity ?? "warning",
-    message: event.message,
-    service: "worldcup2026-live-calendar",
-    sentAt: new Date(now).toISOString()
-  };
+  const payload = formatAlertPayload(config.ALERT_WEBHOOK_TYPE, event, new Date(now));
 
   try {
     await fetch(config.ALERT_WEBHOOK_URL, {
@@ -30,6 +31,34 @@ export async function sendAlert(
   } catch (error) {
     console.error("alert delivery failed", error);
   }
+}
+
+export function formatAlertPayload(type: AppConfig["ALERT_WEBHOOK_TYPE"], event: AlertEvent, sentAt: Date) {
+  const severity = event.severity ?? "warning";
+  const text = `[${severity.toUpperCase()}] ${event.title}\n${event.message}\nservice: worldcup2026-live-calendar\nsentAt: ${sentAt.toISOString()}`;
+
+  if (type === "feishu") {
+    return {
+      msg_type: "text",
+      content: {
+        text
+      }
+    };
+  }
+
+  if (type === "slack") {
+    return {
+      text
+    };
+  }
+
+  return {
+    title: event.title,
+    severity,
+    message: event.message,
+    service: "worldcup2026-live-calendar",
+    sentAt: sentAt.toISOString()
+  };
 }
 
 export async function sendTestAlert(config: AppConfig): Promise<void> {

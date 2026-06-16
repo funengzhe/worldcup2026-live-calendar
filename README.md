@@ -112,6 +112,21 @@ npm run alert:test
 
 没有配置 webhook 时，命令会明确失败，避免误以为告警已打通。
 
+支持三种 webhook payload：
+
+```bash
+ALERT_WEBHOOK_TYPE=generic
+ALERT_WEBHOOK_TYPE=feishu
+ALERT_WEBHOOK_TYPE=slack
+```
+
+飞书自定义机器人建议使用：
+
+```bash
+ALERT_WEBHOOK_TYPE=feishu
+ALERT_WEBHOOK_URL=<feishu-bot-webhook>
+```
+
 ## 安全
 
 这是公开仓库。不要提交生产服务器、云账号、SSH、数据库、API Key、Webhook 或其他私有运维信息。详见 [SECURITY.md](./SECURITY.md)。

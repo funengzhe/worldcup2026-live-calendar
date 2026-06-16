@@ -25,7 +25,8 @@ const EnvSchema = z.object({
   API_FOOTBALL_API_KEY: z.string().optional(),
   API_FOOTBALL_LEAGUE_ID: z.coerce.number().int().positive().default(1),
   API_FOOTBALL_SEASON: z.coerce.number().int().positive().default(2026),
-  ALERT_WEBHOOK_URL: z.string().optional()
+  ALERT_WEBHOOK_URL: z.string().optional(),
+  ALERT_WEBHOOK_TYPE: z.enum(["generic", "feishu", "slack"]).default("generic")
 });
 
 export type AppConfig = ReturnType<typeof loadConfig>;
