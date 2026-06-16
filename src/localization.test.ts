@@ -1,11 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { formatBeijingDateTime, formatBeijingIcsLocal, teamNameZh, venueZh } from "./localization.js";
+import {
+  formatBeijingDateTime,
+  formatBeijingIcsLocal,
+  teamDisplayNameZh,
+  teamFlag,
+  teamNameZh,
+  venueZh
+} from "./localization.js";
 
 describe("localization", () => {
   it("translates teams and venues", () => {
     expect(teamNameZh("Mexico")).toBe("墨西哥");
     expect(teamNameZh("W101")).toBe("第 101 场胜者");
     expect(venueZh("New York/New Jersey (East Rutherford)")).toBe("纽约/新泽西（东卢瑟福）");
+  });
+
+  it("adds flags to real teams but not placeholders", () => {
+    expect(teamFlag("Mexico")).toBe("🇲🇽");
+    expect(teamDisplayNameZh("Mexico")).toBe("🇲🇽 墨西哥");
+    expect(teamDisplayNameZh("W101")).toBe("第 101 场胜者");
   });
 
   it("formats Beijing time for display and ICS", () => {

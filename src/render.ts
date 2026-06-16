@@ -2,7 +2,7 @@ import type { ReadinessResult } from "./readiness.js";
 import type { AppState, Match } from "./types.js";
 import { summary } from "./calendar.js";
 import { teamFeeds } from "./feeds.js";
-import { teamNameZh } from "./localization.js";
+import { formatBeijingDateTime, teamDisplayNameZh, venueZh } from "./localization.js";
 
 export function renderHome(state: AppState, publicBaseUrl: string): string {
   const icsUrl = `${publicBaseUrl.replace(/\/$/, "")}/worldcup2026.ics`;
@@ -17,14 +17,14 @@ export function renderHome(state: AppState, publicBaseUrl: string): string {
       <main class="shell">
         <section class="hero">
           <div>
-            <p class="eyebrow">World Cup 2026</p>
-            <h1>Live calendar feed</h1>
-            <p class="subtle">赛程、场馆和赛果会自动写入订阅日历。手机端实际刷新时间由日历客户端控制。</p>
+            <p class="eyebrow">2026 世界杯</p>
+            <h1>全部赛程订阅日历</h1>
+            <p class="subtle">默认订阅全部 104 场比赛，使用北京时间、中文队名、国旗和自动赛果更新。手机端实际刷新时间由日历客户端控制。</p>
           </div>
           <div class="actions">
-            <a class="button primary" href="webcal://${icsUrl.replace(/^https?:\/\//, "")}">Apple Calendar</a>
-            <a class="button" href="https://calendar.google.com/calendar/render?cid=${encodeURIComponent(icsUrl)}">Google Calendar</a>
-            <a class="button" href="${icsUrl}">ICS</a>
+            <a class="button primary" href="webcal://${icsUrl.replace(/^https?:\/\//, "")}">订阅全部赛程</a>
+            <a class="button" href="https://calendar.google.com/calendar/render?cid=${encodeURIComponent(icsUrl)}">添加到 Google 日历</a>
+            <a class="button" href="${icsUrl}">下载 ICS</a>
           </div>
         </section>
 
@@ -48,7 +48,7 @@ export function renderHome(state: AppState, publicBaseUrl: string): string {
           <article class="panel">
             <h2>球队订阅</h2>
             <div class="chips">
-              ${teams.map((feed) => `<a href="${escapeHtml(`${publicBaseUrl.replace(/\/$/, "")}/feeds/teams/${feed.slug}.ics`)}">${escapeHtml(teamNameZh(feed.team))}</a>`).join("")}
+              ${teams.map((feed) => `<a href="${escapeHtml(`${publicBaseUrl.replace(/\/$/, "")}/feeds/teams/${feed.slug}.ics`)}">${escapeHtml(teamDisplayNameZh(feed.team))}</a>`).join("")}
             </div>
           </article>
         </section>
@@ -119,7 +119,7 @@ export function renderMatchPage(match: Match): string {
           <div>
             <p class="eyebrow">Match ${match.matchNo}</p>
             <h1>${escapeHtml(summary(match))}</h1>
-            <p class="subtle">${escapeHtml(match.venue)} · ${formatDate(match.kickoffAtUtc)}</p>
+            <p class="subtle">${escapeHtml(venueZh(match.venue))} · ${formatBeijingDateTime(match.kickoffAtUtc)}</p>
           </div>
         </section>
         <article class="panel"><pre>${escapeHtml(JSON.stringify(match, null, 2))}</pre></article>
@@ -166,7 +166,7 @@ function page(title: string, body: string): string {
 }
 
 function renderMatch(match: Match): string {
-  return `<div class="match"><strong>${escapeHtml(summary(match))}</strong><p>${escapeHtml(match.venue)} · ${formatDate(match.kickoffAtUtc)}</p></div>`;
+  return `<div class="match"><strong>${escapeHtml(summary(match))}</strong><p>${escapeHtml(venueZh(match.venue))} · ${formatBeijingDateTime(match.kickoffAtUtc)}</p></div>`;
 }
 
 function renderReadinessCheck(check: ReadinessResult["checks"][number]): string {

@@ -4,7 +4,7 @@ import { generateIcs } from "./calendar.js";
 import { loadConfig } from "./config.js";
 import { findTeamFeed, knockoutMatches, matchesForTeam, teamFeeds } from "./feeds.js";
 import { checkHealth } from "./health.js";
-import { teamNameZh } from "./localization.js";
+import { teamDisplayNameZh } from "./localization.js";
 import { renderPrometheusMetrics } from "./metrics.js";
 import { checkReadiness } from "./readiness.js";
 import { renderHome, renderMatchPage, renderReadiness, renderStatus } from "./render.js";
@@ -124,8 +124,8 @@ app.get("/feeds/teams/:slug.ics", async (request, reply) => {
       generateIcs(matchesForTeam(state.matches, feed.team), {
         calendarDomain: config.CALENDAR_DOMAIN,
         baseUrl: config.PUBLIC_BASE_URL,
-        calendarName: `2026 世界杯：${teamNameZh(feed.team)}`,
-        calendarDescription: `2026 世界杯 ${teamNameZh(feed.team)}赛程与赛果（北京时间）`
+        calendarName: `2026 世界杯：${teamDisplayNameZh(feed.team)}`,
+        calendarDescription: `2026 世界杯 ${teamDisplayNameZh(feed.team)}赛程与赛果（北京时间）`
       })
     );
 });

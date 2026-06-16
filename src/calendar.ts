@@ -9,7 +9,7 @@ import {
   groupOrRoundZh,
   stageZh,
   statusZh,
-  teamNameZh,
+  teamDisplayNameZh,
   venueZh
 } from "./localization.js";
 
@@ -115,8 +115,8 @@ function eventLines(match: Match, calendarDomain: string, baseUrl: string, dtsta
 }
 
 export function summary(match: Match): string {
-  const home = teamNameZh(match.homeTeam);
-  const away = teamNameZh(match.awayTeam);
+  const home = teamDisplayNameZh(match.homeTeam);
+  const away = teamDisplayNameZh(match.awayTeam);
   if (match.status === "final" && match.score) {
     const base = `${home} ${match.score.home}-${match.score.away} ${away}`;
     if (match.score.penaltyHome !== undefined && match.score.penaltyAway !== undefined) {
@@ -133,7 +133,7 @@ export function description(match: Match): string {
     `2026 世界杯 · 第 ${match.matchNo} 场`,
     groupOrRoundZh(match),
     stageZh(match.stage),
-    `${teamNameZh(match.homeTeam)} vs ${teamNameZh(match.awayTeam)}`,
+    `${teamDisplayNameZh(match.homeTeam)} vs ${teamDisplayNameZh(match.awayTeam)}`,
     `北京时间：${formatBeijingDateTime(match.kickoffAtUtc)}`,
     `地点：${venueZh(match.venue)}`,
     `状态：${statusZh(match.status)}`

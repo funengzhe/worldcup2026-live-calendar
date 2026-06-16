@@ -51,6 +51,55 @@ const TEAM_ZH: Record<string, string> = {
   Uzbekistan: "乌兹别克斯坦"
 };
 
+const TEAM_COUNTRY_CODE: Record<string, string> = {
+  Algeria: "DZ",
+  Argentina: "AR",
+  Australia: "AU",
+  Austria: "AT",
+  Belgium: "BE",
+  "Bosnia & Herzegovina": "BA",
+  Brazil: "BR",
+  Canada: "CA",
+  "Cape Verde": "CV",
+  Colombia: "CO",
+  Croatia: "HR",
+  Curaçao: "CW",
+  "Czech Republic": "CZ",
+  "DR Congo": "CD",
+  Ecuador: "EC",
+  Egypt: "EG",
+  France: "FR",
+  Germany: "DE",
+  Ghana: "GH",
+  Haiti: "HT",
+  Iran: "IR",
+  Iraq: "IQ",
+  "Ivory Coast": "CI",
+  Japan: "JP",
+  Jordan: "JO",
+  Mexico: "MX",
+  Morocco: "MA",
+  Netherlands: "NL",
+  "New Zealand": "NZ",
+  Norway: "NO",
+  Panama: "PA",
+  Paraguay: "PY",
+  Portugal: "PT",
+  Qatar: "QA",
+  "Saudi Arabia": "SA",
+  Senegal: "SN",
+  "South Africa": "ZA",
+  "South Korea": "KR",
+  Spain: "ES",
+  Sweden: "SE",
+  Switzerland: "CH",
+  Tunisia: "TN",
+  Turkey: "TR",
+  USA: "US",
+  Uruguay: "UY",
+  Uzbekistan: "UZ"
+};
+
 const VENUE_ZH: Record<string, string> = {
   Atlanta: "亚特兰大",
   "Boston (Foxborough)": "波士顿（福克斯堡）",
@@ -80,6 +129,20 @@ const STATUS_ZH: Record<MatchStatus, string> = {
 
 export function teamNameZh(team: string): string {
   return TEAM_ZH[team] ?? translatePlaceholder(team);
+}
+
+export function teamDisplayNameZh(team: string): string {
+  const flag = teamFlag(team);
+  const name = teamNameZh(team);
+  return flag ? `${flag} ${name}` : name;
+}
+
+export function teamFlag(team: string): string | undefined {
+  if (team === "England") return subdivisionFlag("gbeng");
+  if (team === "Scotland") return subdivisionFlag("gbsct");
+
+  const countryCode = TEAM_COUNTRY_CODE[team];
+  return countryCode ? countryFlag(countryCode) : undefined;
 }
 
 export function venueZh(venue: string): string {
@@ -153,4 +216,15 @@ function translatePlaceholder(team: string): string {
   if (/^W\d+$/.test(team)) return `第 ${team.slice(1)} 场胜者`;
   if (/^L\d+$/.test(team)) return `第 ${team.slice(1)} 场负者`;
   return team;
+}
+
+function countryFlag(countryCode: string): string {
+  return [...countryCode.toUpperCase()]
+    .map((letter) => String.fromCodePoint(0x1f1e6 + letter.charCodeAt(0) - 65))
+    .join("");
+}
+
+function subdivisionFlag(tag: string): string {
+  const tagChars = [...tag.toLowerCase()].map((char) => String.fromCodePoint(0xe0000 + char.charCodeAt(0)));
+  return `${String.fromCodePoint(0x1f3f4)}${tagChars.join("")}${String.fromCodePoint(0xe007f)}`;
 }
