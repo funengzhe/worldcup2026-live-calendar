@@ -37,13 +37,14 @@ describe("renderHome", () => {
 
     const html = await renderHome(state, "https://example.com");
 
-    expect(html).toContain("全部赛程，一次订阅");
+    expect(html).toContain("2026世界杯赛程");
+    expect(html).toContain("MATCH PASS");
+    expect(html).toContain("支球队");
+    expect(html).toContain("场比赛");
     expect(html).toContain("<svg");
     expect(html).toContain('data-copy="https://example.com/worldcup2026.ics"');
-    expect(html).toContain("🇲🇽 墨西哥 vs 🇿🇦 南非");
-    expect(html).toContain("CCTV");
-    expect(html).toContain("抖音");
-    expect(html).toContain("小红书");
-    expect(html).toContain("B站");
+    expect(html).toContain("墨西哥");
+    expect(html).toContain("南非");
+    expect(html).toContain("CCTV 5 直播");
   });
 });
