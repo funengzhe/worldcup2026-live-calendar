@@ -4,6 +4,7 @@ import { generateIcs } from "./calendar.js";
 import { loadConfig } from "./config.js";
 import { findTeamFeed, knockoutMatches, matchesForTeam, teamFeeds } from "./feeds.js";
 import { checkHealth } from "./health.js";
+import { teamNameZh } from "./localization.js";
 import { renderPrometheusMetrics } from "./metrics.js";
 import { checkReadiness } from "./readiness.js";
 import { renderHome, renderMatchPage, renderReadiness, renderStatus } from "./render.js";
@@ -101,8 +102,8 @@ app.get("/feeds/knockout.ics", async (_request, reply) => {
       generateIcs(matches, {
         calendarDomain: config.CALENDAR_DOMAIN,
         baseUrl: config.PUBLIC_BASE_URL,
-        calendarName: "World Cup 2026 Knockout",
-        calendarDescription: "2026 World Cup knockout fixtures and results"
+        calendarName: "2026 世界杯淘汰赛",
+        calendarDescription: "2026 世界杯淘汰赛赛程与赛果（北京时间）"
       })
     );
 });
@@ -123,8 +124,8 @@ app.get("/feeds/teams/:slug.ics", async (request, reply) => {
       generateIcs(matchesForTeam(state.matches, feed.team), {
         calendarDomain: config.CALENDAR_DOMAIN,
         baseUrl: config.PUBLIC_BASE_URL,
-        calendarName: `World Cup 2026: ${feed.team}`,
-        calendarDescription: `2026 World Cup fixtures and results for ${feed.team}`
+        calendarName: `2026 世界杯：${teamNameZh(feed.team)}`,
+        calendarDescription: `2026 世界杯 ${teamNameZh(feed.team)}赛程与赛果（北京时间）`
       })
     );
 });

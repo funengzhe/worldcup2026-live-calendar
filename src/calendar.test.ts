@@ -30,7 +30,9 @@ describe("calendar generation", () => {
     expect(ics).toContain("BEGIN:VCALENDAR");
     expect(ics).toContain("BEGIN:VEVENT");
     expect(ics).toContain("UID:worldcup2026-match-001@example.com");
-    expect(ics).toContain("DTSTART:20260611T190000Z");
+    expect(ics).toContain("X-WR-TIMEZONE:Asia/Shanghai");
+    expect(ics).toContain("DTSTART;TZID=Asia/Shanghai:20260612T030000");
+    expect(ics).toContain("SUMMARY:墨西哥 vs 南非");
     expect(ics).toContain("END:VCALENDAR");
   });
 
@@ -41,6 +43,6 @@ describe("calendar generation", () => {
         status: "final",
         score: { home: 2, away: 1 }
       })
-    ).toBe("Mexico 2-1 South Africa");
+    ).toBe("墨西哥 2-1 南非");
   });
 });

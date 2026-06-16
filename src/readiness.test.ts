@@ -17,7 +17,7 @@ const state: AppState = {
 };
 
 describe("checkReadiness", () => {
-  it("is operational but not ready without paid provider and alert webhook", () => {
+  it("is operational but not ready without alert webhook", () => {
     const result = checkReadiness(
       state,
       {
@@ -31,7 +31,7 @@ describe("checkReadiness", () => {
 
     expect(result.operational).toBe(true);
     expect(result.ready).toBe(false);
-    expect(result.checks.find((check) => check.name === "paidPrimaryScoreProvider")?.ok).toBe(
+    expect(result.checks.find((check) => check.name === "paidPrimaryScoreProvider")?.required).toBe(
       false
     );
     expect(result.checks.find((check) => check.name === "externalAlertWebhook")?.ok).toBe(false);
@@ -49,5 +49,23 @@ describe("checkReadiness", () => {
     );
 
     expect(result.ready).toBe(true);
+  });
+
+  it("can be ready without a paid provider when alerting is configured", () => {
+    const result = checkReadiness(
+      state,
+      {
+        PRIMARY_SCORE_PROVIDER: "openfootball",
+        API_FOOTBALL_API_KEY: undefined,
+        PRIMARY_SCORE_PROVIDER_API_KEY: undefined,
+        ALERT_WEBHOOK_URL: "https://example.com/webhook"
+      } as AppConfig,
+      { ok: true, checks: [] }
+    );
+
+    expect(result.ready).toBe(true);
+    expect(result.checks.find((check) => check.name === "paidPrimaryScoreProvider")?.required).toBe(
+      false
+    );
   });
 });

@@ -1,8 +1,17 @@
 import { createHash } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { Match, Publication } from "./types.js";
 import { addHours, formatUtcStamp } from "./time.js";
+import {
+  formatBeijingDateTime,
+  formatBeijingIcsLocal,
+  groupOrRoundZh,
+  stageZh,
+  statusZh,
+  teamNameZh,
+  venueZh
+} from "./localization.js";
 
 export function generateIcs(
   matches: Match[],
@@ -20,10 +29,21 @@ export function generateIcs(
     "PRODID:-//worldcup2026-live-calendar//CN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    `X-WR-CALNAME:${escapeText(options.calendarName ?? "World Cup 2026")}`,
-    `X-WR-CALDESC:${escapeText(options.calendarDescription ?? "2026 World Cup fixtures and results")}`,
+    `X-WR-CALNAME:${escapeText(options.calendarName ?? "2026 世界杯赛程")}`,
+    `X-WR-CALDESC:${escapeText(options.calendarDescription ?? "2026 世界杯赛程与赛果（北京时间）")}`,
+    "X-WR-TIMEZONE:Asia/Shanghai",
     "REFRESH-INTERVAL;VALUE=DURATION:PT15M",
-    "X-PUBLISHED-TTL:PT15M"
+    "X-PUBLISHED-TTL:PT15M",
+    "BEGIN:VTIMEZONE",
+    "TZID:Asia/Shanghai",
+    "X-LIC-LOCATION:Asia/Shanghai",
+    "BEGIN:STANDARD",
+    "TZOFFSETFROM:+0800",
+    "TZOFFSETTO:+0800",
+    "TZNAME:CST",
+    "DTSTART:19700101T000000",
+    "END:STANDARD",
+    "END:VTIMEZONE"
   ];
 
   for (const match of matches) {
@@ -41,9 +61,9 @@ export async function publishIcs(
   const ics = generateIcs(matches, options);
   validateIcs(ics);
   await mkdir(path.dirname(options.calendarPath), { recursive: true });
-  const tmpPath = `${options.calendarPath}.tmp`;
+  const tmpPath = `${options.calendarPath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
   await writeFile(tmpPath, ics);
-  await writeFile(options.calendarPath, ics);
+  await rename(tmpPath, options.calendarPath);
 
   return {
     version: Date.now(),
@@ -67,8 +87,8 @@ export function validateIcs(ics: string): void {
 }
 
 function eventLines(match: Match, calendarDomain: string, baseUrl: string, dtstamp: string): string[] {
-  const start = formatUtcStamp(new Date(match.kickoffAtUtc));
-  const end = formatUtcStamp(new Date(addHours(match.kickoffAtUtc, 2)));
+  const startBeijing = formatBeijingIcsLocal(match.kickoffAtUtc);
+  const endBeijing = formatBeijingIcsLocal(addHours(match.kickoffAtUtc, 2));
   const lastModified = formatUtcStamp(new Date(match.updatedAt));
   const matchUrl = `${baseUrl.replace(/\/$/, "")}/matches/${match.id}`;
 
@@ -79,54 +99,57 @@ function eventLines(match: Match, calendarDomain: string, baseUrl: string, dtsta
     `DTSTAMP:${dtstamp}`,
     `CREATED:${dtstamp}`,
     `LAST-MODIFIED:${lastModified}`,
-    `DTSTART:${start}`,
-    `DTEND:${end}`,
+    `DTSTART;TZID=Asia/Shanghai:${startBeijing}`,
+    `DTEND;TZID=Asia/Shanghai:${endBeijing}`,
     `SUMMARY:${escapeText(summary(match))}`,
-    `LOCATION:${escapeText(match.venue)}`,
+    `LOCATION:${escapeText(venueZh(match.venue))}`,
     `DESCRIPTION:${escapeText(description(match))}`,
     `URL:${escapeText(matchUrl)}`,
     "BEGIN:VALARM",
     "TRIGGER:-PT30M",
     "ACTION:DISPLAY",
-    `DESCRIPTION:${escapeText(`${summary(match)} will start in 30 minutes`)}`,
+    `DESCRIPTION:${escapeText(`${summary(match)} 将在 30 分钟后开始`)}`,
     "END:VALARM",
     "END:VEVENT"
   ];
 }
 
 export function summary(match: Match): string {
+  const home = teamNameZh(match.homeTeam);
+  const away = teamNameZh(match.awayTeam);
   if (match.status === "final" && match.score) {
-    const base = `${match.homeTeam} ${match.score.home}-${match.score.away} ${match.awayTeam}`;
+    const base = `${home} ${match.score.home}-${match.score.away} ${away}`;
     if (match.score.penaltyHome !== undefined && match.score.penaltyAway !== undefined) {
-      return `${base} (${match.score.penaltyHome}-${match.score.penaltyAway} pens)`;
+      return `${base}（点球 ${match.score.penaltyHome}-${match.score.penaltyAway}）`;
     }
     return base;
   }
 
-  return `World Cup 2026: ${match.homeTeam} vs ${match.awayTeam}`;
+  return `${home} vs ${away}`;
 }
 
 export function description(match: Match): string {
   const parts = [
-    `Match ${match.matchNo}`,
-    match.group ?? match.round,
-    `Stage: ${match.stage}`,
-    `Status: ${match.status}`,
-    `Source: ${match.source}`,
-    `Confidence: ${match.confidence}`
+    `2026 世界杯 · 第 ${match.matchNo} 场`,
+    groupOrRoundZh(match),
+    stageZh(match.stage),
+    `${teamNameZh(match.homeTeam)} vs ${teamNameZh(match.awayTeam)}`,
+    `北京时间：${formatBeijingDateTime(match.kickoffAtUtc)}`,
+    `地点：${venueZh(match.venue)}`,
+    `状态：${statusZh(match.status)}`
   ];
 
   if (match.score) {
-    parts.push(`Score: ${match.score.home}-${match.score.away}`);
+    parts.push(`比分：${match.score.home}-${match.score.away}`);
     if (match.score.halftimeHome !== undefined && match.score.halftimeAway !== undefined) {
-      parts.push(`Half-time: ${match.score.halftimeHome}-${match.score.halftimeAway}`);
+      parts.push(`半场：${match.score.halftimeHome}-${match.score.halftimeAway}`);
     }
   }
 
   if (match.goals.length > 0) {
     parts.push(
-      `Goals: ${match.goals
-        .map((goal) => `${goal.minute}' ${goal.name}${goal.penalty ? " (pen)" : ""}`)
+      `进球：${match.goals
+        .map((goal) => `${goal.minute}' ${goal.name}${goal.penalty ? "（点球）" : ""}`)
         .join("; ")}`
     );
   }

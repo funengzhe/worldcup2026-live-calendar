@@ -2,6 +2,7 @@ import type { ReadinessResult } from "./readiness.js";
 import type { AppState, Match } from "./types.js";
 import { summary } from "./calendar.js";
 import { teamFeeds } from "./feeds.js";
+import { teamNameZh } from "./localization.js";
 
 export function renderHome(state: AppState, publicBaseUrl: string): string {
   const icsUrl = `${publicBaseUrl.replace(/\/$/, "")}/worldcup2026.ics`;
@@ -47,7 +48,7 @@ export function renderHome(state: AppState, publicBaseUrl: string): string {
           <article class="panel">
             <h2>球队订阅</h2>
             <div class="chips">
-              ${teams.map((feed) => `<a href="${escapeHtml(`${publicBaseUrl.replace(/\/$/, "")}/feeds/teams/${feed.slug}.ics`)}">${escapeHtml(feed.team)}</a>`).join("")}
+              ${teams.map((feed) => `<a href="${escapeHtml(`${publicBaseUrl.replace(/\/$/, "")}/feeds/teams/${feed.slug}.ics`)}">${escapeHtml(teamNameZh(feed.team))}</a>`).join("")}
             </div>
           </article>
         </section>
@@ -188,6 +189,7 @@ function recentFinals(matches: Match[]) {
 
 function formatDate(iso: string): string {
   return new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Shanghai",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",

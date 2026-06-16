@@ -39,10 +39,10 @@ export function checkReadiness(
     {
       name: "paidPrimaryScoreProvider",
       ok: hasPaidProvider,
-      required: true,
+      required: false,
       message: hasPaidProvider
         ? "API-Football primary provider is configured"
-        : "set PRIMARY_SCORE_PROVIDER=api-football and API_FOOTBALL_API_KEY"
+        : "optional: set PRIMARY_SCORE_PROVIDER=api-football and API_FOOTBALL_API_KEY"
     },
     {
       name: "externalAlertWebhook",
@@ -60,7 +60,7 @@ export function checkReadiness(
 
   return {
     operational: health.ok,
-    ready: checks.every((check) => check.ok),
+    ready: checks.filter((check) => check.required).every((check) => check.ok),
     checks
   };
 }
