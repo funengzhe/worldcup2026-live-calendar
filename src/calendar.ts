@@ -4,7 +4,15 @@ import path from "node:path";
 import type { Match, Publication } from "./types.js";
 import { addHours, formatUtcStamp } from "./time.js";
 
-export function generateIcs(matches: Match[], options: { calendarDomain: string; baseUrl: string }): string {
+export function generateIcs(
+  matches: Match[],
+  options: {
+    calendarDomain: string;
+    baseUrl: string;
+    calendarName?: string;
+    calendarDescription?: string;
+  }
+): string {
   const now = formatUtcStamp();
   const lines = [
     "BEGIN:VCALENDAR",
@@ -12,8 +20,8 @@ export function generateIcs(matches: Match[], options: { calendarDomain: string;
     "PRODID:-//worldcup2026-live-calendar//CN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    "X-WR-CALNAME:World Cup 2026",
-    "X-WR-CALDESC:2026 World Cup fixtures and results",
+    `X-WR-CALNAME:${escapeText(options.calendarName ?? "World Cup 2026")}`,
+    `X-WR-CALDESC:${escapeText(options.calendarDescription ?? "2026 World Cup fixtures and results")}`,
     "REFRESH-INTERVAL;VALUE=DURATION:PT15M",
     "X-PUBLISHED-TTL:PT15M"
   ];

@@ -1,11 +1,14 @@
 import type { ReadinessResult } from "./readiness.js";
 import type { AppState, Match } from "./types.js";
 import { summary } from "./calendar.js";
+import { teamFeeds } from "./feeds.js";
 
 export function renderHome(state: AppState, publicBaseUrl: string): string {
   const icsUrl = `${publicBaseUrl.replace(/\/$/, "")}/worldcup2026.ics`;
+  const knockoutUrl = `${publicBaseUrl.replace(/\/$/, "")}/feeds/knockout.ics`;
   const next = nextMatch(state.matches);
   const recent = recentFinals(state.matches);
+  const teams = teamFeeds(state.matches);
 
   return page(
     "World Cup 2026 Calendar",
@@ -33,6 +36,19 @@ export function renderHome(state: AppState, publicBaseUrl: string): string {
             <h2>同步状态</h2>
             <p>${state.publication ? `最近发布：${formatDate(state.publication.publishedAt)}` : "尚未发布"}</p>
             <p>${state.matches.length} 场比赛，${state.matches.filter((match) => match.status === "final").length} 场已完场</p>
+          </article>
+        </section>
+
+        <section class="grid">
+          <article class="panel">
+            <h2>淘汰赛订阅</h2>
+            <p><a href="${escapeHtml(knockoutUrl)}">${escapeHtml(knockoutUrl)}</a></p>
+          </article>
+          <article class="panel">
+            <h2>球队订阅</h2>
+            <div class="chips">
+              ${teams.map((feed) => `<a href="${escapeHtml(`${publicBaseUrl.replace(/\/$/, "")}/feeds/teams/${feed.slug}.ics`)}">${escapeHtml(feed.team)}</a>`).join("")}
+            </div>
           </article>
         </section>
 
@@ -137,6 +153,9 @@ function page(title: string, body: string): string {
     .match { border-top:1px solid var(--line); padding:12px 0; }
     .match:first-of-type { border-top:0; padding-top:0; }
     code, pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+    a { color:var(--accent); }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; }
+    .chips a { display:inline-flex; align-items:center; min-height:32px; padding:0 10px; border:1px solid var(--line); border-radius:8px; text-decoration:none; color:var(--ink); background:#fff; font-size:14px; }
     p { margin:8px 0; line-height:1.55; }
     @media (max-width:760px) { .hero { align-items:flex-start; flex-direction:column; } .actions { justify-content:flex-start; } .grid { grid-template-columns:1fr; } h1 { font-size:42px; } }
   </style>

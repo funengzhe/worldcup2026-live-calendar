@@ -5,6 +5,7 @@
 ## 功能
 
 - 生成 `worldcup2026.ics`。
+- 提供全量、淘汰赛、按球队订阅源。
 - 提供首页、状态页和健康检查接口。
 - 从 OpenFootball 读取公开赛程数据。
 - 支持后续接入实时比分源。
@@ -24,6 +25,8 @@ npm run dev
 
 - `http://localhost:3000/`
 - `http://localhost:3000/worldcup2026.ics`
+- `http://localhost:3000/feeds/knockout.ics`
+- `http://localhost:3000/feeds/teams/mexico.ics`
 - `http://localhost:3000/status`
 - `http://localhost:3000/readiness`
 - `http://localhost:3000/healthz`

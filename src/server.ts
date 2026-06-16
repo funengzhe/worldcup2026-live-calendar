@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
 import Fastify from "fastify";
+import { generateIcs } from "./calendar.js";
 import { loadConfig } from "./config.js";
+import { findTeamFeed, knockoutMatches, matchesForTeam, teamFeeds } from "./feeds.js";
 import { checkHealth } from "./health.js";
 import { renderPrometheusMetrics } from "./metrics.js";
 import { checkReadiness } from "./readiness.js";
@@ -23,6 +25,18 @@ app.get("/status", async (_request, reply) => {
 });
 
 app.get("/api/status", async () => store.read());
+
+app.get("/api/feeds", async () => {
+  const state = await store.read();
+  return {
+    full: "/worldcup2026.ics",
+    knockout: "/feeds/knockout.ics",
+    teams: teamFeeds(state.matches).map((feed) => ({
+      ...feed,
+      path: `/feeds/teams/${feed.slug}.ics`
+    }))
+  };
+});
 
 app.get("/metrics", async (_request, reply) => {
   const state = await store.read();
@@ -70,6 +84,49 @@ app.get("/worldcup2026.ics", async (_request, reply) => {
       .type("text/calendar; charset=utf-8")
       .send(ics);
   }
+});
+
+app.get("/feeds/knockout.ics", async (_request, reply) => {
+  const state = await store.read();
+  const matches = knockoutMatches(state.matches);
+  if (matches.length === 0) {
+    reply.code(404).send({ ok: false, error: "Knockout matches are not available yet" });
+    return;
+  }
+
+  reply
+    .header("cache-control", "public, max-age=60")
+    .type("text/calendar; charset=utf-8")
+    .send(
+      generateIcs(matches, {
+        calendarDomain: config.CALENDAR_DOMAIN,
+        baseUrl: config.PUBLIC_BASE_URL,
+        calendarName: "World Cup 2026 Knockout",
+        calendarDescription: "2026 World Cup knockout fixtures and results"
+      })
+    );
+});
+
+app.get("/feeds/teams/:slug.ics", async (request, reply) => {
+  const { slug } = request.params as { slug: string };
+  const state = await store.read();
+  const feed = findTeamFeed(state.matches, slug);
+  if (!feed) {
+    reply.code(404).send({ ok: false, error: "Team feed not found" });
+    return;
+  }
+
+  reply
+    .header("cache-control", "public, max-age=60")
+    .type("text/calendar; charset=utf-8")
+    .send(
+      generateIcs(matchesForTeam(state.matches, feed.team), {
+        calendarDomain: config.CALENDAR_DOMAIN,
+        baseUrl: config.PUBLIC_BASE_URL,
+        calendarName: `World Cup 2026: ${feed.team}`,
+        calendarDescription: `2026 World Cup fixtures and results for ${feed.team}`
+      })
+    );
 });
 
 app.get("/matches/:id", async (request, reply) => {
