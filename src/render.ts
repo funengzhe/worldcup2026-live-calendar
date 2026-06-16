@@ -291,7 +291,7 @@ function page(title: string, body: string): string {
     .led-stat span { margin-top:9px; color:#9eb2a4; font-size:13px; font-weight:800; }
     .led-icon { margin-top:8px; color:rgba(255,255,255,.56); font-size:18px; }
     .match-pass { position:relative; display:grid; align-content:start; gap:10px; max-width:520px; justify-self:center; width:100%; }
-    .pass-art { position:relative; width:100%; aspect-ratio:4 / 3; background:url("/assets/img/blank-match-pass.png") center / contain no-repeat; filter:drop-shadow(0 28px 58px rgba(0,0,0,.62)); isolation:isolate; }
+    .pass-art { position:relative; width:100%; aspect-ratio:1332 / 751; background:url("/assets/img/blank-match-pass.png") center / contain no-repeat; filter:drop-shadow(0 28px 58px rgba(0,0,0,.62)); isolation:isolate; }
     .pass-title { position:absolute; top:18.2%; left:18.4%; width:22%; text-align:left; text-shadow:0 0 10px rgba(0,0,0,.8); }
     .pass-title p { margin:0 0 2px; color:rgba(245,218,142,.88); font-size:clamp(7px, 1vw, 10px); font-weight:1000; letter-spacing:.04em; line-height:1.1; }
     .pass-title h2 { margin:0; color:#fff7d8; font-size:clamp(12px, 2vw, 19px); font-weight:1000; line-height:.95; letter-spacing:0; }
