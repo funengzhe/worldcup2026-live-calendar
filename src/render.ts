@@ -371,6 +371,7 @@ function page(title: string, body: string): string {
     .day-heading span { display:block; margin-top:4px; color:#91a79a; font-size:12px; }
     .day-matches { display:grid; gap:8px; }
     #schedule-panel { display:grid; gap:8px; }
+    #schedule-panel[hidden] { display:none; }
     .match-row { min-height:64px; display:grid; grid-template-columns:92px minmax(0, 1fr) 210px; align-items:center; gap:16px; padding:10px 12px 10px 18px; border:1px solid rgba(255,255,255,.10); border-radius:999px; background:rgba(8,24,15,.66); backdrop-filter:blur(10px); box-shadow:inset 0 0 22px rgba(0,0,0,.25); transition:border-color .2s ease, background .2s ease, transform .2s ease; }
     .match-row:hover { border-color:rgba(0,255,102,.34); background:rgba(10,31,19,.78); transform:translateY(-1px); }
     .match-time { color:#fff; font:900 17px/1 "SFMono-Regular", Consolas, monospace; }
