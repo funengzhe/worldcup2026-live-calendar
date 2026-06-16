@@ -17,7 +17,13 @@ const app = Fastify({ logger: true });
 
 app.get("/", async (_request, reply) => {
   const state = await store.read();
-  reply.type("text/html; charset=utf-8").send(await renderHome(state, config.PUBLIC_BASE_URL));
+  reply.type("text/html; charset=utf-8").send(
+    await renderHome(state, config.PUBLIC_BASE_URL, {
+      alipayUrl: config.SUPPORT_ALIPAY_URL,
+      alipayQrUrl: config.SUPPORT_ALIPAY_QR_URL,
+      githubSponsorsUrl: config.SUPPORT_GITHUB_SPONSORS_URL
+    })
+  );
 });
 
 app.get("/status", async (_request, reply) => {

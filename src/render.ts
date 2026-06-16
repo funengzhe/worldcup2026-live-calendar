@@ -14,7 +14,17 @@ import {
   venueZh
 } from "./localization.js";
 
-export async function renderHome(state: AppState, publicBaseUrl: string): Promise<string> {
+export interface SupportConfig {
+  alipayUrl?: string;
+  alipayQrUrl?: string;
+  githubSponsorsUrl?: string;
+}
+
+export async function renderHome(
+  state: AppState,
+  publicBaseUrl: string,
+  support: SupportConfig = {}
+): Promise<string> {
   const baseUrl = publicBaseUrl.replace(/\/$/, "");
   const icsUrl = `${baseUrl}/worldcup2026.ics`;
   const webcalUrl = `webcal://${icsUrl.replace(/^https?:\/\//, "")}`;
@@ -202,10 +212,7 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
             <strong>开源仓库</strong>
             <p><a href="https://github.com/funengzhe/worldcup2026-live-calendar" target="_blank" rel="noreferrer">GitHub: funengzhe/worldcup2026-live-calendar</a></p>
           </div>
-          <div>
-            <strong>支持作者</strong>
-            <p>觉得有用可以先 Star 项目；赞赏码或 GitHub Sponsors 地址确认后，会接入“请作者喝杯咖啡”入口。</p>
-          </div>
+          ${renderSupportFooter(support)}
           <div class="footer-disclaimer">
             本站为球迷自建开源项目，非 FIFA 官方服务。赛程、赛果、直播信息可能因官方调整、数据源延迟或日历客户端刷新策略产生偏差，请以 FIFA、央视等官方发布为准。
           </div>
@@ -213,6 +220,36 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
       </main>
     `
   );
+}
+
+function renderSupportFooter(support: SupportConfig): string {
+  const githubUrl = "https://github.com/funengzhe/worldcup2026-live-calendar";
+  const sponsorUrl = support.githubSponsorsUrl ?? githubUrl;
+  const alipayButton = support.alipayUrl
+    ? `<a class="support-button primary" href="${escapeHtml(support.alipayUrl)}" target="_blank" rel="noreferrer">支付宝支持</a>`
+    : `<span class="support-button disabled" aria-disabled="true">支付宝通道准备中</span>`;
+  const qr = support.alipayQrUrl
+    ? `
+      <div class="support-qr">
+        <img src="${escapeHtml(support.alipayQrUrl)}" alt="支付宝打赏二维码" loading="lazy" width="86" height="86" />
+        <span>手机访问可直接点击支付宝支持；电脑访问也可以扫码支持这个开源赛程日历继续维护。</span>
+      </div>
+    `
+    : "";
+
+  return `
+    <div class="support-card">
+      <strong>支持作者</strong>
+      <p>本站免费使用、开源维护。觉得有用，可以 Star 项目，或者请作者喝杯咖啡。</p>
+      <div class="support-actions">
+        <a class="support-button" href="${escapeHtml(githubUrl)}" target="_blank" rel="noreferrer">GitHub Star</a>
+        ${alipayButton}
+        <a class="support-button" href="${escapeHtml(sponsorUrl)}" target="_blank" rel="noreferrer">开源支持</a>
+      </div>
+      ${qr}
+      <span class="support-status">${support.alipayUrl ? "支付宝支持已开启" : "等待支付宝支付功能配置"}</span>
+    </div>
+  `;
 }
 
 export function renderStatus(state: AppState): string {
@@ -411,6 +448,18 @@ function page(title: string, body: string): string {
     .site-footer strong { color:#fff; font-size:15px; }
     .site-footer p { margin:8px 0 0; color:#9fb2a5; font-size:13px; line-height:1.6; }
     .site-footer a { color:var(--neon); text-decoration:none; font-weight:900; overflow-wrap:anywhere; }
+    .support-card { position:relative; min-height:172px; padding:14px; border:1px solid rgba(212,175,55,.18); border-radius:16px; background:linear-gradient(180deg, rgba(16,38,24,.72), rgba(4,13,8,.70)); box-shadow:inset 0 0 28px rgba(212,175,55,.05); overflow:hidden; }
+    .support-card::before { content:""; position:absolute; inset:0 0 auto; height:2px; background:linear-gradient(90deg, transparent, rgba(212,175,55,.70), transparent); opacity:.82; }
+    .support-card > * { position:relative; }
+    .support-card p { margin:8px 0 12px; }
+    .support-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .support-button { min-height:38px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 13px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.055); color:#fff; text-decoration:none; font-size:12px; font-weight:1000; cursor:pointer; }
+    .support-button.primary { border-color:rgba(0,255,102,.36); background:linear-gradient(180deg, #00ff66, #00d957); color:#031007; box-shadow:0 0 14px rgba(0,255,102,.18); }
+    .support-button.disabled { cursor:not-allowed; color:#7f9388; background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.08); }
+    .support-qr { display:grid; grid-template-columns:86px minmax(0, 1fr); gap:10px; align-items:center; margin-top:12px; padding:10px; border:1px solid rgba(255,255,255,.08); border-radius:14px; background:rgba(0,0,0,.22); }
+    .support-qr img { width:86px; height:86px; display:block; object-fit:contain; border-radius:10px; background:#fff; padding:6px; }
+    .support-qr span { display:block; color:#9fb2a5; font-size:12px; line-height:1.5; }
+    .support-status { display:inline-flex; align-items:center; min-height:22px; margin-top:10px; padding:0 8px; border-radius:999px; border:1px solid rgba(212,175,55,.20); color:var(--gold-2); background:rgba(212,175,55,.08); font-size:11px; font-weight:900; }
     .footer-disclaimer { grid-column:1 / -1; padding-top:12px; border-top:1px solid rgba(255,255,255,.08); color:#84978b; font-size:12px; line-height:1.7; }
     .team-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
     .team-feed-card { border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:14px; background:rgba(10,26,17,.58); }
@@ -438,6 +487,7 @@ function page(title: string, body: string): string {
       .day-heading span { margin-top:0; }
       .subscribe-features { grid-template-columns:repeat(2, minmax(0, 1fr)); }
       .site-footer { grid-template-columns:1fr; }
+      .support-card { min-height:auto; }
     }
     @media (max-width:720px) {
       .shell { padding:26px 12px 46px; }
@@ -472,6 +522,10 @@ function page(title: string, body: string): string {
       .subscribe-features { grid-template-columns:1fr; }
       .subscribe-features div { min-height:auto; }
       .subscribe-actions { display:grid; grid-template-columns:1fr; }
+      .support-actions { display:grid; grid-template-columns:1fr; }
+      .support-button { min-height:44px; }
+      .support-qr { grid-template-columns:78px minmax(0, 1fr); }
+      .support-qr img { width:78px; height:78px; }
       .grid { grid-template-columns:1fr; }
     }
   </style>

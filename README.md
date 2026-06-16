@@ -81,7 +81,21 @@ APP_DIR=/path/to/app scripts/restore-runtime.sh /path/to/backups/20260616T000000
 - `SCHEDULE_SYNC_INTERVAL_MS`
 - `PRIMARY_SCORE_PROVIDER`
 - `API_FOOTBALL_API_KEY`
+- `SUPPORT_ALIPAY_URL`
+- `SUPPORT_ALIPAY_QR_URL`
+- `SUPPORT_GITHUB_SPONSORS_URL`
 - `ALERT_WEBHOOK_URL`
+
+### 配置打赏入口
+
+底部“支持作者”模块默认会显示 GitHub Star 和“支付宝通道准备中”。支付宝支付功能申请完成后，只需要在生产环境 `.env` 中配置公开跳转链接或二维码图片地址：
+
+```bash
+SUPPORT_ALIPAY_URL=<your-public-alipay-payment-url>
+SUPPORT_ALIPAY_QR_URL=<your-public-alipay-qr-image-url>
+```
+
+不要把个人收款码、商户后台链接、密钥或服务器私有地址提交到公开仓库。
 
 ### 启用 API-Football 主比分源
 
