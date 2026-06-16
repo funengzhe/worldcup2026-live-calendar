@@ -31,6 +31,8 @@ describe("calendar generation", () => {
     expect(ics).toContain("BEGIN:VEVENT");
     expect(ics).toContain("UID:worldcup2026-match-001@example.com");
     expect(ics).toContain("X-WR-TIMEZONE:Asia/Shanghai");
+    expect(ics).toContain("X-WR-CALCOLOR:#1f8f3a");
+    expect(ics).toContain("X-APPLE-CALENDAR-COLOR:#1f8f3a");
     expect(ics).toContain("DTSTART;TZID=Asia/Shanghai:20260612T030000");
     expect(ics).toContain("SUMMARY:🇲🇽 墨西哥 vs 🇿🇦 南非");
     expect(ics).toContain("END:VCALENDAR");

@@ -23,6 +23,7 @@ export function generateIcs(
   }
 ): string {
   const now = formatUtcStamp();
+  const calendarColor = "#1f8f3a";
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -32,6 +33,8 @@ export function generateIcs(
     `X-WR-CALNAME:${escapeText(options.calendarName ?? "2026 世界杯赛程")}`,
     `X-WR-CALDESC:${escapeText(options.calendarDescription ?? "2026 世界杯赛程与赛果（北京时间）")}`,
     "X-WR-TIMEZONE:Asia/Shanghai",
+    `X-WR-CALCOLOR:${calendarColor}`,
+    `X-APPLE-CALENDAR-COLOR:${calendarColor}`,
     "REFRESH-INTERVAL;VALUE=DURATION:PT15M",
     "X-PUBLISHED-TTL:PT15M",
     "BEGIN:VTIMEZONE",
