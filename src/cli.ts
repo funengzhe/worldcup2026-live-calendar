@@ -1,3 +1,4 @@
+import { sendTestAlert } from "./alerts.js";
 import { loadConfig } from "./config.js";
 import { JsonStore } from "./store.js";
 import { publishCalendar, syncSchedule, syncScores } from "./sync.js";
@@ -21,6 +22,11 @@ async function main() {
     case "sync:scores": {
       const state = await syncScores(config, store);
       console.log(`score sync complete, ${state.matches.filter((match) => match.source === "espn").length} ESPN-backed matches`);
+      return;
+    }
+    case "alert:test": {
+      await sendTestAlert(config);
+      console.log("test alert sent");
       return;
     }
     default:

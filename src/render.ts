@@ -1,3 +1,4 @@
+import type { ReadinessResult } from "./readiness.js";
 import type { AppState, Match } from "./types.js";
 import { summary } from "./calendar.js";
 
@@ -72,6 +73,26 @@ export function renderStatus(state: AppState): string {
   );
 }
 
+export function renderReadiness(readiness: ReadinessResult): string {
+  return page(
+    "Production Readiness",
+    `
+      <main class="shell">
+        <section class="hero compact">
+          <div>
+            <p class="eyebrow">Production Readiness</p>
+            <h1>${readiness.ready ? "Ready" : readiness.operational ? "Operational" : "Needs attention"}</h1>
+            <p class="subtle">Operational 表示当前服务可用；Ready 表示已经达到无人值守生产标准。</p>
+          </div>
+        </section>
+        <section class="grid">
+          ${readiness.checks.map(renderReadinessCheck).join("")}
+        </section>
+      </main>
+    `
+  );
+}
+
 export function renderMatchPage(match: Match): string {
   return page(
     summary(match),
@@ -126,6 +147,10 @@ function page(title: string, body: string): string {
 
 function renderMatch(match: Match): string {
   return `<div class="match"><strong>${escapeHtml(summary(match))}</strong><p>${escapeHtml(match.venue)} · ${formatDate(match.kickoffAtUtc)}</p></div>`;
+}
+
+function renderReadinessCheck(check: ReadinessResult["checks"][number]): string {
+  return `<article class="panel"><h2>${escapeHtml(check.ok ? "OK" : "TODO")} · ${escapeHtml(check.name)}</h2><p>${escapeHtml(check.message)}</p><p>${check.required ? "Required" : "Optional"}</p></article>`;
 }
 
 function nextMatch(matches: Match[]) {

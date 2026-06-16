@@ -25,6 +25,7 @@ npm run dev
 - `http://localhost:3000/`
 - `http://localhost:3000/worldcup2026.ics`
 - `http://localhost:3000/status`
+- `http://localhost:3000/readiness`
 - `http://localhost:3000/healthz`
 
 ## Docker 运行
@@ -88,6 +89,28 @@ API_FOOTBALL_SEASON=2026
 ```
 
 没有配置 key 时，默认仍使用 ESPN 备源运行，不会把公开服务打红。
+
+## Readiness
+
+`/healthz` 表示当前服务是否可用，适合健康检查和自动重启。
+
+`/readiness` 和 `/api/readiness` 表示是否达到无人值守生产标准。它会检查：
+
+- 运行时健康。
+- 是否发布完整 104 场比赛。
+- 是否配置付费主比分源。
+- 是否配置外部告警 webhook。
+- 是否存在已发布 ICS 的哈希。
+
+## 告警测试
+
+配置 `ALERT_WEBHOOK_URL` 后可以运行：
+
+```bash
+npm run alert:test
+```
+
+没有配置 webhook 时，命令会明确失败，避免误以为告警已打通。
 
 ## 安全
 

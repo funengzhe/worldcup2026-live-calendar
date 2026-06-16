@@ -2,7 +2,8 @@ import { readFile } from "node:fs/promises";
 import Fastify from "fastify";
 import { loadConfig } from "./config.js";
 import { checkHealth } from "./health.js";
-import { renderHome, renderMatchPage, renderStatus } from "./render.js";
+import { checkReadiness } from "./readiness.js";
+import { renderHome, renderMatchPage, renderReadiness, renderStatus } from "./render.js";
 import { JsonStore } from "./store.js";
 import { publishCalendar, syncSchedule } from "./sync.js";
 
@@ -21,6 +22,17 @@ app.get("/status", async (_request, reply) => {
 });
 
 app.get("/api/status", async () => store.read());
+
+app.get("/api/readiness", async () => {
+  const state = await store.read();
+  return checkReadiness(state, config, checkHealth(state, config));
+});
+
+app.get("/readiness", async (_request, reply) => {
+  const state = await store.read();
+  const readiness = checkReadiness(state, config, checkHealth(state, config));
+  reply.type("text/html; charset=utf-8").send(renderReadiness(readiness));
+});
 
 app.get("/healthz", async (_request, reply) => {
   const state = await store.read();

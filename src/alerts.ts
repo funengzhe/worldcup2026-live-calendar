@@ -31,3 +31,16 @@ export async function sendAlert(
     console.error("alert delivery failed", error);
   }
 }
+
+export async function sendTestAlert(config: AppConfig): Promise<void> {
+  if (!config.ALERT_WEBHOOK_URL) {
+    throw new Error("ALERT_WEBHOOK_URL is not configured");
+  }
+
+  await sendAlert(config, {
+    key: `test-${Date.now()}`,
+    title: "World Cup 2026 calendar alert test",
+    message: "This is a test alert from worldcup2026-live-calendar.",
+    severity: "warning"
+  });
+}

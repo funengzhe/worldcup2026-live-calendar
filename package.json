@@ -13,6 +13,7 @@
     "sync:schedule": "tsx src/cli.ts sync:schedule",
     "sync:scores": "tsx src/cli.ts sync:scores",
     "publish:ics": "tsx src/cli.ts publish:ics",
+    "alert:test": "tsx src/cli.ts alert:test",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run"
