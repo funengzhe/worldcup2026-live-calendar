@@ -155,10 +155,25 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
           </div>
           <div class="empty-state" id="empty-state" hidden>这一天暂无比赛。</div>
           <div class="subscribe-panel-view" id="subscribe-panel-view" hidden>
-            <h2>订阅网络日历，自动同步赛程变化</h2>
-            <p>请使用 webcal 网络订阅，不下载静态 ICS 文件。之后淘汰赛对阵、赛果和时间调整会由后台更新到订阅源。</p>
-            <a class="neon-link" href="${escapeHtml(webcalUrl)}">一键添加到手机日历</a>
-            <button type="button" data-copy="${escapeHtml(webcalUrl)}">复制 webcal 订阅链接</button>
+            <div class="subscribe-hero">
+              <div>
+                <p class="eyebrow">Current Calendar</p>
+                <h2>2026 世界杯完整赛程日历</h2>
+                <p>当前公开订阅源包含全部 ${state.matches.length} 场比赛，使用北京时间、中文队名和网络动态同步。</p>
+              </div>
+              <div class="sync-badge">WEB<br />CAL</div>
+            </div>
+            <div class="subscribe-features" aria-label="当前日历说明">
+              <div><strong>北京时间</strong><span>所有开球时间按 Asia/Shanghai 展示，不需要手动换算。</span></div>
+              <div><strong>中文队名</strong><span>赛程、球队与场馆尽量使用中文名称，手机日历中直接可读。</span></div>
+              <div><strong>赛程同步</strong><span>赛程、淘汰赛对阵、赛果和时间调整会由后台更新到同一个订阅源。</span></div>
+              <div><strong>网络订阅</strong><span>请使用 webcal 添加，不下载静态 ICS 文件，避免后续变化无法同步。</span></div>
+            </div>
+            <p class="sync-note">本站订阅源会持续更新；iPhone、Google 日历等客户端的实际刷新频率由各自系统决定，通常不会像网页一样立即刷新。</p>
+            <div class="subscribe-actions">
+              <a class="neon-link" href="${escapeHtml(webcalUrl)}">一键添加到手机日历</a>
+              <button type="button" data-copy="${escapeHtml(webcalUrl)}">复制 webcal 订阅链接</button>
+            </div>
           </div>
           <script id="schedule-data" type="application/json">${escapeJsonForHtml(JSON.stringify(clientState))}</script>
         </section>
@@ -179,6 +194,24 @@ export async function renderHome(state: AppState, publicBaseUrl: string): Promis
             </div>
           </section>
         </section>
+
+        <footer class="site-footer">
+          <div>
+            <strong>免费使用</strong>
+            <p>本站面向普通球迷免费提供 2026 世界杯赛程查询和手机日历订阅服务。</p>
+          </div>
+          <div>
+            <strong>开源仓库</strong>
+            <p><a href="https://github.com/funengzhe/worldcup2026-live-calendar" target="_blank" rel="noreferrer">GitHub: funengzhe/worldcup2026-live-calendar</a></p>
+          </div>
+          <div>
+            <strong>支持作者</strong>
+            <p>觉得有用可以先 Star 项目；赞赏码或 GitHub Sponsors 地址确认后，会接入“请作者喝杯咖啡”入口。</p>
+          </div>
+          <div class="footer-disclaimer">
+            本站为球迷自建开源项目，非 FIFA 官方服务。赛程、赛果、直播信息可能因官方调整、数据源延迟或日历客户端刷新策略产生偏差，请以 FIFA、央视等官方发布为准。
+          </div>
+        </footer>
       </main>
     `
   );
@@ -291,23 +324,23 @@ function page(title: string, body: string): string {
     .led-stat span { margin-top:9px; color:#9eb2a4; font-size:13px; font-weight:800; }
     .led-icon { margin-top:8px; color:rgba(255,255,255,.56); font-size:18px; }
     .match-pass { position:relative; display:grid; align-content:start; gap:10px; max-width:520px; justify-self:center; width:100%; }
-    .pass-art { position:relative; width:100%; aspect-ratio:1332 / 751; background:url("/assets/img/blank-match-pass.png") center / contain no-repeat; filter:drop-shadow(0 28px 58px rgba(0,0,0,.62)); isolation:isolate; }
-    .pass-title { position:absolute; top:18.2%; left:18.4%; width:22%; text-align:left; text-shadow:0 0 10px rgba(0,0,0,.8); }
-    .pass-title p { margin:0 0 2px; color:rgba(245,218,142,.88); font-size:clamp(7px, 1vw, 10px); font-weight:1000; letter-spacing:.04em; line-height:1.1; }
-    .pass-title h2 { margin:0; color:#fff7d8; font-size:clamp(12px, 2vw, 19px); font-weight:1000; line-height:.95; letter-spacing:0; }
-    .pass-qr-slot { position:absolute; top:37.2%; left:35.7%; width:28.4%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; }
+    .pass-art { container-type:inline-size; position:relative; width:100%; aspect-ratio:1332 / 751; background:url("/assets/img/blank-match-pass.png") center / contain no-repeat; filter:drop-shadow(0 28px 58px rgba(0,0,0,.62)); isolation:isolate; }
+    .pass-title { position:absolute; top:20.5%; left:18.6%; width:18.8%; text-align:left; text-shadow:0 0 10px rgba(0,0,0,.8); }
+    .pass-title p { margin:0 0 .8cqw; color:rgba(245,218,142,.90); font-size:2.05cqw; font-weight:1000; letter-spacing:.03em; line-height:1.02; }
+    .pass-title h2 { margin:0; color:#fff7d8; font-size:4.3cqw; font-weight:1000; line-height:.90; letter-spacing:0; }
+    .pass-qr-slot { position:absolute; top:34.6%; left:37.0%; width:26.2%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; }
     .qr { position:relative; width:82%; height:82%; padding:4%; border-radius:6px; background:#fff; box-shadow:0 0 18px rgba(0,255,102,.42), 0 0 0 1px rgba(255,255,255,.28); overflow:hidden; }
     .qr svg { width:100%; height:100%; display:block; }
     .qr-scan { position:absolute; inset:0; border:1px solid rgba(0,255,102,.45); border-radius:6px; pointer-events:none; animation:qrPulse 1.9s ease-in-out infinite; }
-    .pass-badge { position:absolute; bottom:20.2%; left:15.2%; width:16.7%; height:15.2%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; text-shadow:0 0 12px rgba(0,0,0,.85); }
-    .pass-badge strong { color:#d4af37; font-size:clamp(14px, 2.4vw, 26px); font-weight:1000; line-height:.92; }
-    .pass-badge span { margin-top:3px; color:#eaf6eb; font-size:clamp(8px, 1.2vw, 12px); font-weight:1000; line-height:1; }
-    .pass-badge small { margin-top:3px; color:#91a89a; font-size:clamp(6px, .9vw, 9px); font-weight:900; line-height:1; }
-    .pass-info { position:absolute; top:36%; right:12.6%; width:20.6%; min-height:22%; display:flex; flex-direction:column; justify-content:center; gap:3px; text-align:left; text-shadow:0 0 12px rgba(0,0,0,.9); }
-    .pass-info strong { margin-bottom:2px; color:#d4af37; font-size:clamp(11px, 1.55vw, 18px); font-weight:1000; line-height:1; }
-    .pass-info span { position:relative; color:#dce9dd; font-size:clamp(7px, 1.02vw, 11px); font-weight:900; line-height:1.25; padding-left:10px; }
-    .pass-info span::before { content:""; position:absolute; left:0; top:.42em; width:4px; height:4px; border-radius:999px; background:var(--neon); box-shadow:0 0 8px rgba(0,255,102,.75); }
-    .pass-live-tag { position:absolute; bottom:20.1%; right:12.5%; width:20.2%; height:7.3%; display:flex; align-items:center; justify-content:center; color:var(--neon); font:1000 clamp(8px, 1.15vw, 12px)/1 "SFMono-Regular", Consolas, monospace; letter-spacing:.12em; text-shadow:0 0 10px rgba(0,255,102,.7); animation:livePulse 1.8s ease-in-out infinite; }
+    .pass-badge { position:absolute; bottom:17.1%; left:14.5%; width:18.4%; height:16.8%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; text-shadow:0 0 12px rgba(0,0,0,.85); }
+    .pass-badge strong { color:#d4af37; font-size:6.15cqw; font-weight:1000; line-height:.88; }
+    .pass-badge span { margin-top:.72cqw; color:#eaf6eb; font-size:2.8cqw; font-weight:1000; line-height:1; }
+    .pass-badge small { margin-top:.5cqw; color:#cfe1d3; font-size:2.05cqw; font-weight:900; line-height:1; }
+    .pass-info { position:absolute; top:35.7%; right:13.0%; width:20.8%; min-height:26%; display:flex; flex-direction:column; justify-content:flex-start; gap:1.15cqw; text-align:left; text-shadow:0 0 12px rgba(0,0,0,.9); }
+    .pass-info strong { margin:0 0 .2cqw; color:#d4af37; font-size:4.55cqw; font-weight:1000; line-height:1; }
+    .pass-info span { position:relative; color:#dce9dd; font-size:2.55cqw; font-weight:900; line-height:1.18; padding-left:2.5cqw; }
+    .pass-info span::before { content:""; position:absolute; left:0; top:.34em; width:.9cqw; height:.9cqw; border-radius:999px; background:var(--neon); box-shadow:0 0 8px rgba(0,255,102,.75); }
+    .pass-live-tag { position:absolute; bottom:21.2%; right:13.7%; width:17.2%; height:8.2%; display:flex; align-items:center; justify-content:center; color:var(--neon); font:1000 2.8cqw/1 "SFMono-Regular", Consolas, monospace; letter-spacing:.12em; text-shadow:0 0 10px rgba(0,255,102,.7); animation:livePulse 1.8s ease-in-out infinite; }
     @keyframes qrPulse { 0%, 100% { opacity:.52; box-shadow:inset 0 0 0 rgba(0,255,102,0); } 50% { opacity:1; box-shadow:inset 0 0 18px rgba(0,255,102,.28); } }
     @keyframes livePulse { 0%, 100% { opacity:.72; } 50% { opacity:1; } }
     .copy-row { display:grid; grid-template-columns:minmax(0, 1fr) 74px; gap:8px; }
@@ -359,9 +392,24 @@ function page(title: string, body: string): string {
     .bottom-grid { display:grid; grid-template-columns:360px minmax(0, 1fr); gap:16px; margin-top:22px; }
     .info-card, .subscribe-panel-view, .empty-state { border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:18px; background:rgba(5,16,10,.74); backdrop-filter:blur(12px); box-shadow:0 18px 44px rgba(0,0,0,.24); }
     .empty-state { color:#9fb2a5; text-align:center; }
-    .subscribe-panel-view { display:grid; gap:12px; }
+    .subscribe-panel-view { display:grid; gap:14px; }
     .subscribe-panel-view[hidden], .empty-state[hidden] { display:none; }
     .subscribe-panel-view button { min-height:38px; border:1px solid rgba(0,255,102,.40); border-radius:999px; background:rgba(0,255,102,.12); color:var(--neon); font-weight:900; cursor:pointer; }
+    .subscribe-hero { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; }
+    .subscribe-hero h2 { color:#fff; font-size:26px; line-height:1.15; }
+    .subscribe-hero p:not(.eyebrow) { max-width:690px; color:#b7c8bc; }
+    .sync-badge { flex:0 0 auto; width:78px; height:78px; display:grid; place-items:center; border:1px solid rgba(0,255,102,.34); border-radius:18px; background:rgba(0,255,102,.10); color:var(--neon); font:1000 18px/1 "SFMono-Regular", Consolas, monospace; text-align:center; box-shadow:inset 0 0 22px rgba(0,255,102,.08), 0 0 18px rgba(0,255,102,.12); }
+    .subscribe-features { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; }
+    .subscribe-features div { min-height:116px; padding:14px; border:1px solid rgba(212,175,55,.16); border-radius:14px; background:rgba(0,0,0,.22); }
+    .subscribe-features strong { display:block; color:var(--gold-2); font-size:15px; margin-bottom:8px; }
+    .subscribe-features span { display:block; color:#aebfb4; font-size:13px; line-height:1.55; }
+    .sync-note { margin:0; color:#91a79a; font-size:13px; line-height:1.6; }
+    .subscribe-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .site-footer { margin-top:28px; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; padding:18px; border:1px solid rgba(255,255,255,.08); border-radius:18px; background:rgba(2,8,5,.66); backdrop-filter:blur(14px); color:#aebfb4; box-shadow:0 18px 44px rgba(0,0,0,.24); }
+    .site-footer strong { color:#fff; font-size:15px; }
+    .site-footer p { margin:8px 0 0; color:#9fb2a5; font-size:13px; line-height:1.6; }
+    .site-footer a { color:var(--neon); text-decoration:none; font-weight:900; overflow-wrap:anywhere; }
+    .footer-disclaimer { grid-column:1 / -1; padding-top:12px; border-top:1px solid rgba(255,255,255,.08); color:#84978b; font-size:12px; line-height:1.7; }
     .group-grid, .team-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
     .group-card, .team-feed-card { border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:14px; background:rgba(10,26,17,.58); }
     .group-card h3, .team-feed-card h3 { margin:0 0 10px; color:var(--gold-2); font-size:15px; }
@@ -387,6 +435,8 @@ function page(title: string, body: string): string {
       .day-group { grid-template-columns:1fr; gap:8px; }
       .day-heading { border-right:1px solid rgba(212,175,55,.30); border-radius:14px; display:flex; justify-content:space-between; align-items:center; }
       .day-heading span { margin-top:0; }
+      .subscribe-features { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .site-footer { grid-template-columns:1fr; }
     }
     @media (max-width:720px) {
       .shell { padding:26px 12px 46px; }
@@ -414,6 +464,11 @@ function page(title: string, body: string): string {
       .venue { white-space:normal; }
       .watch-links a { min-height:38px; padding:0 16px; }
       .group-grid, .team-grid { grid-template-columns:1fr; }
+      .subscribe-hero { display:grid; }
+      .sync-badge { width:64px; height:64px; font-size:15px; }
+      .subscribe-features { grid-template-columns:1fr; }
+      .subscribe-features div { min-height:auto; }
+      .subscribe-actions { display:grid; grid-template-columns:1fr; }
       .grid { grid-template-columns:1fr; }
     }
   </style>
