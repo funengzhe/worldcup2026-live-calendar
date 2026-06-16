@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import Fastify from "fastify";
 import { loadConfig } from "./config.js";
 import { checkHealth } from "./health.js";
+import { renderPrometheusMetrics } from "./metrics.js";
 import { checkReadiness } from "./readiness.js";
 import { renderHome, renderMatchPage, renderReadiness, renderStatus } from "./render.js";
 import { JsonStore } from "./store.js";
@@ -22,6 +23,11 @@ app.get("/status", async (_request, reply) => {
 });
 
 app.get("/api/status", async () => store.read());
+
+app.get("/metrics", async (_request, reply) => {
+  const state = await store.read();
+  reply.type("text/plain; version=0.0.4; charset=utf-8").send(renderPrometheusMetrics(state));
+});
 
 app.get("/api/readiness", async () => {
   const state = await store.read();

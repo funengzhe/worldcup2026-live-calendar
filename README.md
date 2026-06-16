@@ -27,6 +27,7 @@ npm run dev
 - `http://localhost:3000/status`
 - `http://localhost:3000/readiness`
 - `http://localhost:3000/healthz`
+- `http://localhost:3000/metrics`
 
 ## Docker 运行
 
@@ -101,6 +102,19 @@ API_FOOTBALL_SEASON=2026
 - 是否配置付费主比分源。
 - 是否配置外部告警 webhook。
 - 是否存在已发布 ICS 的哈希。
+
+## Metrics
+
+`/metrics` 暴露 Prometheus 文本格式指标，便于接入 Uptime Kuma、Prometheus 或其他 HTTP 监控。
+
+包含：
+
+- `wc2026_matches_total`
+- `wc2026_matches_final_total`
+- `wc2026_calendar_publication_age_seconds`
+- `wc2026_worker_heartbeat_age_seconds`
+- `wc2026_provider_up`
+- `wc2026_provider_last_success_age_seconds`
 
 ## 告警测试
 
