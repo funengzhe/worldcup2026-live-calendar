@@ -36,6 +36,16 @@ docker compose up -d --build
 
 默认只需要 `web` 和 `worker`。`postgres` 和 `redis` 已作为后续生产增强预留。
 
+## 生产健康检查
+
+仓库提供了一个通用健康检查脚本：
+
+```bash
+HEALTHCHECK_URL=http://127.0.0.1:3026/healthz scripts/healthcheck.sh
+```
+
+生产环境可以用 systemd timer、cron 或外部监控定时执行。真实服务名、内网地址和告警地址应放在服务器环境中，不要提交到仓库。
+
 ## 配置
 
 真实配置写入 `.env`，不要提交。
