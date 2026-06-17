@@ -109,7 +109,7 @@ function alignHalfScore(game: CctvGame, matched: Match, side: "home" | "away"): 
 function normalizeStatus(status?: string): MatchStatus {
   if (!status) return "scheduled";
   if (status.includes("中场")) return "halftime";
-  if (status.includes("进行") || status.includes("直播")) return "live";
+  if (status.includes("上半场") || status.includes("下半场") || status.includes("进行") || status.includes("直播")) return "live";
   if (status.includes("结束") || status.includes("集锦") || status.includes("回放")) return "final";
   if (status.includes("延期")) return "postponed";
   return "scheduled";
