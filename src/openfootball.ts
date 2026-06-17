@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { formatError } from "./errors.js";
 import type { Match, NormalizedSourceMatch, Goal } from "./types.js";
 import { parseOpenFootballDateTime } from "./time.js";
 
@@ -31,19 +32,50 @@ const SourceSchema = z.object({
   matches: z.array(SourceMatchSchema)
 });
 
-export async function fetchOpenFootballMatches(url: string): Promise<NormalizedSourceMatch[]> {
-  const response = await fetch(url, {
-    headers: {
-      "user-agent": "worldcup2026-live-calendar/1.0"
-    }
-  });
+interface FetchOpenFootballOptions {
+  attempts?: number;
+  timeoutMs?: number;
+  retryDelayMs?: number;
+}
 
-  if (!response.ok) {
-    throw new Error(`OpenFootball request failed: ${response.status} ${response.statusText}`);
+const DEFAULT_ATTEMPTS = 3;
+const DEFAULT_TIMEOUT_MS = 15_000;
+const DEFAULT_RETRY_DELAY_MS = 500;
+
+export async function fetchOpenFootballMatches(
+  url: string,
+  options: FetchOpenFootballOptions = {}
+): Promise<NormalizedSourceMatch[]> {
+  const attempts = Math.max(1, options.attempts ?? DEFAULT_ATTEMPTS);
+  const timeoutMs = Math.max(1, options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+  const retryDelayMs = Math.max(0, options.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS);
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          "user-agent": "worldcup2026-live-calendar/1.0"
+        },
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenFootball request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const parsed = SourceSchema.parse(await response.json());
+      return parsed.matches;
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) break;
+      await sleep(retryDelayMs * attempt);
+    }
   }
 
-  const parsed = SourceSchema.parse(await response.json());
-  return parsed.matches;
+  throw new Error(`OpenFootball fetch failed after ${attempts} attempts: ${formatError(lastError)}`, {
+    cause: lastError
+  });
 }
 
 export function normalizeOpenFootballMatches(sourceMatches: NormalizedSourceMatch[], now = new Date()): Match[] {
@@ -106,4 +138,8 @@ function inferStage(round: string): string {
   if (normalized.includes("round of 16")) return "round-of-16";
   if (normalized.includes("matchday")) return "group";
   return normalized.replace(/\s+/g, "-");
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

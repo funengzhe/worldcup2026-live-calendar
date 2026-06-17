@@ -17,10 +17,17 @@ export function applyScoreUpdates(state: AppState, updates: ScoreUpdate[]): AppS
 
     const aligned = alignUpdateToMatch(match, update);
 
+    const metadataChanged =
+      (aligned.cctvGameId !== undefined && match.cctvGameId !== aligned.cctvGameId) ||
+      (aligned.cctvUrl !== undefined && match.cctvUrl !== aligned.cctvUrl) ||
+      (aligned.cctvVenue !== undefined && match.cctvVenue !== aligned.cctvVenue) ||
+      (aligned.cctvChannel !== undefined && match.cctvChannel !== aligned.cctvChannel);
+
     const changed =
       match.status !== aligned.status ||
       JSON.stringify(match.score) !== JSON.stringify(aligned.score) ||
-      JSON.stringify(match.goals) !== JSON.stringify(aligned.goals);
+      JSON.stringify(match.goals) !== JSON.stringify(aligned.goals) ||
+      metadataChanged;
 
     if (!changed) return match;
 
@@ -31,6 +38,10 @@ export function applyScoreUpdates(state: AppState, updates: ScoreUpdate[]): AppS
       goals: aligned.goals.length > 0 ? aligned.goals : match.goals,
       confidence: aligned.confidence,
       source: aligned.provider,
+      cctvGameId: aligned.cctvGameId ?? match.cctvGameId,
+      cctvUrl: aligned.cctvUrl ?? match.cctvUrl,
+      cctvVenue: aligned.cctvVenue ?? match.cctvVenue,
+      cctvChannel: aligned.cctvChannel ?? match.cctvChannel,
       sequence: match.sequence + 1,
       updatedAt: aligned.checkedAt
     };

@@ -8,9 +8,11 @@
 
 - 生成 `worldcup2026.ics`。
 - 提供全量、淘汰赛、按球队订阅源。
-- 提供首页、状态页和健康检查接口。
+- 提供“我的世界杯日历”：按球队、球星关注、比赛阶段、比赛状态和北京时间段生成个性化 Webcal 订阅源。
+- 为每个个性化订阅生成可分享页面，方便球迷把“自己的世界杯日历”转发给同队球迷。
+- 提供首页、公开健康检查接口，以及令牌保护的状态页和指标接口。
 - 从 OpenFootball 读取公开赛程数据。
-- 支持后续接入实时比分源。
+- 支持后续接入更稳定的比分数据源。
 - 使用稳定 `UID` 和递增 `SEQUENCE` 更新日历事件。
 
 ## 本地运行
@@ -29,10 +31,24 @@ npm run dev
 - `http://localhost:3000/worldcup2026.ics`
 - `http://localhost:3000/feeds/knockout.ics`
 - `http://localhost:3000/feeds/teams/mexico.ics`
-- `http://localhost:3000/status`
-- `http://localhost:3000/readiness`
+- `http://localhost:3000/feeds/custom.ics?teams=mexico&stages=group`
+- `http://localhost:3000/share/custom?stars=messi`
+- `http://localhost:3000/status?token=<STATUS_ACCESS_TOKEN>`
+- `http://localhost:3000/readiness?token=<STATUS_ACCESS_TOKEN>`
 - `http://localhost:3000/healthz`
-- `http://localhost:3000/metrics`
+- `http://localhost:3000/metrics?token=<STATUS_ACCESS_TOKEN>`
+
+## 个性化订阅
+
+`/feeds/custom.ics` 支持以下查询参数：
+
+- `teams`：球队 slug，多个用英文逗号分隔，例如 `mexico,brazil`。
+- `stars`：球星关注 slug，多个用英文逗号分隔，例如 `messi,mbappe`。当前会追踪球星所在国家队赛程，正式名单稳定后可继续增强到球员级信息。
+- `stages`：`group`、`knockout`。
+- `statuses`：`scheduled`、`live`、`final`。
+- `timeStart` / `timeEnd`：北京时间窗口，例如 `20:00` 到 `08:00`，支持跨午夜。
+
+同样参数可用于 `/share/custom` 生成分享页。分享页会展示二维码、一键订阅、复制订阅源和赛程预览。
 
 ## Docker 运行
 
@@ -77,35 +93,31 @@ APP_DIR=/path/to/app scripts/restore-runtime.sh /path/to/backups/20260616T000000
 
 - `PUBLIC_BASE_URL`
 - `CALENDAR_DOMAIN`
-- `OPENFOOTBALL_URL`
 - `SCHEDULE_SYNC_INTERVAL_MS`
+- `STATUS_ACCESS_TOKEN`
 - `PRIMARY_SCORE_PROVIDER`
 - `API_FOOTBALL_API_KEY`
+- `CCTV_SCHEDULE_URL`
+- `CCTV_TEAMS_URL`
 - `SUPPORT_ALIPAY_URL`
 - `SUPPORT_ALIPAY_QR_URL`
 - `SUPPORT_GITHUB_SPONSORS_URL`
 - `ALIPAY_APP_ID`
 - `ALIPAY_PRIVATE_KEY`
+- `ALIPAY_PRIVATE_KEY_TYPE`
 - `ALIPAY_PUBLIC_KEY`
 - `ALIPAY_GATEWAY`
 - `ALIPAY_RETURN_URL`
 - `ALIPAY_NOTIFY_URL`
+- `FEISHU_WEBHOOK_URL`
+- `FEISHU_WEBHOOK_SECRET`
 - `ALERT_WEBHOOK_URL`
 
-### 配置打赏入口
-
-底部“支持作者”模块默认会显示 GitHub Star 和“支付宝通道准备中”。支付宝支付功能申请完成后，只需要在生产环境 `.env` 中配置公开跳转链接或二维码图片地址：
-
-```bash
-SUPPORT_ALIPAY_URL=<your-public-alipay-payment-url>
-SUPPORT_ALIPAY_QR_URL=<your-public-alipay-qr-image-url>
-```
-
-不要把个人收款码、商户后台链接、密钥或服务器私有地址提交到公开仓库。
+`/healthz` 用于公开存活检查；`/status`、`/readiness`、`/api/status`、`/api/readiness` 和 `/metrics` 建议在生产环境配置 `STATUS_ACCESS_TOKEN`，通过查询参数 `?token=` 或请求头 `x-status-token` 访问。
 
 ### 启用支付宝官方支付
 
-首页通行证下方有“赞助支持”收银台。未配置支付宝密钥时，接口会安全返回“支付宝支付通道正在配置中”。申请完成后，在生产环境 `.env` 写入：
+首页荣耀榜区域有“赞助支持”收银台。未配置支付宝密钥时，接口会安全返回“支付宝支付通道正在配置中”。申请完成后，在生产环境 `.env` 写入：
 
 ```bash
 ALIPAY_APP_ID=<your-alipay-app-id>
@@ -117,6 +129,8 @@ ALIPAY_NOTIFY_URL=https://<public-host>/api/v1/alipay/notify
 ```
 
 真实支付结果必须以支付宝异步通知 `/api/v1/alipay/notify` 验签成功为准，前端跳转只用于用户体验。
+
+留言与反馈表单会把用户填写的内容通过飞书通知站点维护者；联系方式仅用于必要时回复反馈。
 
 ### 启用 API-Football 主比分源
 

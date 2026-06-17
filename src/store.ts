@@ -1,6 +1,6 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, rmdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { AppState, Match, ProviderStatus, Publication } from "./types.js";
+import type { AppState, Match, ProviderStatus, Publication, SavedCalendar, SponsorRecord } from "./types.js";
 
 const EMPTY_STATE: AppState = {
   matches: [],
@@ -13,11 +13,30 @@ const CONFIDENCE_RANK = {
   medium: 2,
   high: 3
 };
+const LOCK_STALE_MS = 30_000;
+const LOCK_RETRY_MS = 25;
+const LOCK_TIMEOUT_MS = 10_000;
 
 export class JsonStore {
   constructor(private readonly statePath: string) {}
 
   async read(): Promise<AppState> {
+    return this.readUnlocked();
+  }
+
+  async write(state: AppState): Promise<void> {
+    await this.withLock(() => this.writeUnlocked(state));
+  }
+
+  async update(mutator: (state: AppState) => AppState | Promise<AppState>): Promise<AppState> {
+    return this.withLock(async () => {
+      const next = await mutator(await this.readUnlocked());
+      await this.writeUnlocked(next);
+      return next;
+    });
+  }
+
+  private async readUnlocked(): Promise<AppState> {
     try {
       return JSON.parse(await readFile(this.statePath, "utf8")) as AppState;
     } catch (error) {
@@ -28,18 +47,53 @@ export class JsonStore {
     }
   }
 
-  async write(state: AppState): Promise<void> {
+  private async writeUnlocked(state: AppState): Promise<void> {
     await mkdir(path.dirname(this.statePath), { recursive: true });
     const tmpPath = `${this.statePath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
     await writeFile(tmpPath, `${JSON.stringify(state, null, 2)}\n`);
     await rename(tmpPath, this.statePath);
   }
 
-  async update(mutator: (state: AppState) => AppState | Promise<AppState>): Promise<AppState> {
-    const next = await mutator(await this.read());
-    await this.write(next);
-    return next;
+  private async withLock<T>(fn: () => Promise<T>): Promise<T> {
+    const lockPath = `${this.statePath}.lock`;
+    const startedAt = Date.now();
+    await mkdir(path.dirname(this.statePath), { recursive: true });
+
+    while (true) {
+      try {
+        await mkdir(lockPath, { recursive: false });
+        break;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+        await removeStaleLock(lockPath);
+        if (Date.now() - startedAt > LOCK_TIMEOUT_MS) {
+          throw new Error(`Timed out waiting for state lock: ${lockPath}`, { cause: error });
+        }
+        await sleep(LOCK_RETRY_MS);
+      }
+    }
+
+    try {
+      return await fn();
+    } finally {
+      await rmdir(lockPath).catch(() => undefined);
+    }
   }
+}
+
+async function removeStaleLock(lockPath: string): Promise<void> {
+  try {
+    const lockStat = await stat(lockPath);
+    if (Date.now() - lockStat.mtimeMs > LOCK_STALE_MS) {
+      await rm(lockPath, { recursive: true, force: true });
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function mergeMatches(existing: Match[], incoming: Match[]): Match[] {
@@ -91,4 +145,40 @@ export function upsertProviderStatus(state: AppState, status: ProviderStatus): A
 
 export function setPublication(state: AppState, publication: Publication): AppState {
   return { ...state, publication };
+}
+
+export function upsertSponsor(state: AppState, sponsor: SponsorRecord): AppState {
+  const sponsors = state.sponsors ?? [];
+  const next = sponsors.filter((item) => item.outTradeNo !== sponsor.outTradeNo);
+  return { ...state, sponsors: [sponsor, ...next].slice(0, 200) };
+}
+
+export function markSponsorPaid(
+  state: AppState,
+  input: {
+    outTradeNo: string;
+    tradeNo?: string;
+    amount?: string;
+    paidAt: string;
+  }
+): AppState {
+  const sponsors = state.sponsors ?? [];
+  const existing = sponsors.find((item) => item.outTradeNo === input.outTradeNo);
+  const paid: SponsorRecord = {
+    outTradeNo: input.outTradeNo,
+    tradeNo: input.tradeNo ?? existing?.tradeNo,
+    amount: input.amount ?? existing?.amount ?? "0.00",
+    displayName: existing?.displayName || "匿名球迷",
+    note: existing?.note,
+    status: "paid",
+    createdAt: existing?.createdAt ?? input.paidAt,
+    paidAt: input.paidAt
+  };
+  return upsertSponsor(state, paid);
+}
+
+export function upsertSavedCalendar(state: AppState, calendar: SavedCalendar): AppState {
+  const savedCalendars = state.savedCalendars ?? [];
+  const next = savedCalendars.filter((item) => item.slug !== calendar.slug);
+  return { ...state, savedCalendars: [calendar, ...next].slice(0, 500) };
 }

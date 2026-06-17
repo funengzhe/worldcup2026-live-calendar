@@ -14,10 +14,10 @@ describe("formatAlertPayload", () => {
   it("formats generic JSON alerts", () => {
     expect(formatAlertPayload("generic", event, sentAt)).toEqual({
       title: "Calendar sync failed",
-      severity: "critical",
+      severity: "严重",
       message: "worker tick failed",
-      service: "worldcup2026-live-calendar",
-      sentAt: "2026-06-16T00:00:00.000Z"
+      service: "2026 世界杯赛程日历",
+      sentAt: "2026/06/16 08:00:00"
     });
   });
 
@@ -25,7 +25,12 @@ describe("formatAlertPayload", () => {
     expect(formatAlertPayload("feishu", event, sentAt)).toEqual({
       msg_type: "text",
       content: {
-        text: expect.stringContaining("[CRITICAL] Calendar sync failed")
+        text: expect.stringContaining("【2026 世界杯日历通知】Calendar sync failed")
+      }
+    });
+    expect(formatAlertPayload("feishu", event, sentAt)).toMatchObject({
+      content: {
+        text: expect.stringContaining("级别：严重")
       }
     });
   });

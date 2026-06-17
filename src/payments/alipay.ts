@@ -53,16 +53,22 @@ export function createAlipayOrder(
   const paymentMethod = method === "wap" ? "alipay.trade.wap.pay" : "alipay.trade.page.pay";
   const productCode = method === "wap" ? "QUICK_WAP_WAY" : "FAST_INSTANT_TRADE_PAY";
   const baseUrl = config.PUBLIC_BASE_URL.replace(/\/$/, "");
+  const bizContent: Record<string, string | number> = {
+    out_trade_no: orderNo,
+    product_code: productCode,
+    subject: "开源日历服务支持",
+    body: "支持开源日历服务持续维护",
+    total_amount: amount
+  };
+
+  if (method === "page") {
+    bizContent.qr_pay_mode = "4";
+    bizContent.qrcode_width = 220;
+  }
 
   const formHtml = alipay.pageExecute(paymentMethod, "POST", {
-    bizContent: {
-      out_trade_no: orderNo,
-      product_code: productCode,
-      subject: "2026 世界杯赛程日历开源赞助",
-      body: "支持 worldcup2026-live-calendar 免费开源维护",
-      total_amount: amount
-    },
-    returnUrl: config.ALIPAY_RETURN_URL ?? `${baseUrl}/?payment=return`,
+    bizContent,
+    returnUrl: config.ALIPAY_RETURN_URL ?? `${baseUrl}/?payment=success#honor-wall`,
     notifyUrl: config.ALIPAY_NOTIFY_URL ?? `${baseUrl}/api/v1/alipay/notify`
   });
 
@@ -76,16 +82,26 @@ export function verifyAlipayNotify(config: AppConfig, payload: Record<string, un
 }
 
 function createAlipaySdk(config: AppConfig): AlipaySdk {
-  const privateKey = normalizePem(config.ALIPAY_PRIVATE_KEY ?? "", "RSA PRIVATE KEY");
+  const privateKeyType = inferPrivateKeyType(config.ALIPAY_PRIVATE_KEY ?? "", config.ALIPAY_PRIVATE_KEY_TYPE);
+  const privateKey = normalizePem(
+    config.ALIPAY_PRIVATE_KEY ?? "",
+    privateKeyType === "PKCS8" ? "PRIVATE KEY" : "RSA PRIVATE KEY"
+  );
   return new AlipaySdk({
     appId: config.ALIPAY_APP_ID ?? "",
-    privateKey: stripPem(privateKey),
-    alipayPublicKey: stripPem(normalizePem(config.ALIPAY_PUBLIC_KEY ?? "", "PUBLIC KEY")),
+    privateKey,
+    alipayPublicKey: normalizePem(config.ALIPAY_PUBLIC_KEY ?? "", "PUBLIC KEY"),
     gateway: config.ALIPAY_GATEWAY,
     signType: "RSA2",
     camelcase: true,
-    keyType: privateKey.includes("BEGIN PRIVATE KEY") ? "PKCS8" : "PKCS1"
+    keyType: privateKeyType
   });
+}
+
+export function inferPrivateKeyType(value: string, fallback: "PKCS1" | "PKCS8" = "PKCS8"): "PKCS1" | "PKCS8" {
+  if (/BEGIN RSA PRIVATE KEY/.test(value)) return "PKCS1";
+  if (/BEGIN PRIVATE KEY/.test(value)) return "PKCS8";
+  return fallback;
 }
 
 export function normalizePem(
@@ -101,13 +117,6 @@ export function normalizePem(
       .match(/.{1,64}/g)
       ?.join("\n") ?? normalized;
   return `-----BEGIN ${type}-----\n${body}\n-----END ${type}-----`;
-}
-
-function stripPem(value: string): string {
-  return value
-    .replace(/-----BEGIN [^-]+-----/g, "")
-    .replace(/-----END [^-]+-----/g, "")
-    .replace(/\s+/g, "");
 }
 
 function isMobileUserAgent(userAgent = ""): boolean {

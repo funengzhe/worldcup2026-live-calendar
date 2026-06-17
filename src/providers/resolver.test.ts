@@ -42,4 +42,43 @@ describe("applyScoreUpdates", () => {
     expect(next.matches[0]?.source).toBe("espn");
     expect(next.matches[0]?.sequence).toBe(1);
   });
+
+  it("stores CCTV metadata and keeps it when a later provider has no CCTV fields", () => {
+    const cctvUpdate: ScoreUpdate = {
+      provider: "cctv",
+      externalId: "22920296",
+      kickoffAtUtc: "2026-06-11T19:00:00.000Z",
+      homeTeam: "Mexico",
+      awayTeam: "South Africa",
+      status: "scheduled",
+      goals: [],
+      confidence: "medium",
+      cctvGameId: 22920296,
+      cctvUrl: "https://worldcup.cctv.com/2026/match/22920296/index.shtml",
+      cctvVenue: "阿兹台克人体育场",
+      cctvChannel: "CCTV5",
+      checkedAt: "2026-06-11T18:00:00.000Z"
+    };
+
+    const withCctv = applyScoreUpdates({ matches: [match], providers: [] }, [cctvUpdate]);
+    expect(withCctv.matches[0]?.cctvUrl).toBe("https://worldcup.cctv.com/2026/match/22920296/index.shtml");
+    expect(withCctv.matches[0]?.cctvVenue).toBe("阿兹台克人体育场");
+
+    const unchanged = applyScoreUpdates(withCctv, [
+      {
+        provider: "espn",
+        externalId: "espn-1",
+        kickoffAtUtc: "2026-06-11T19:00:00.000Z",
+        homeTeam: "Mexico",
+        awayTeam: "South Africa",
+        status: "scheduled",
+        goals: [],
+        confidence: "medium",
+        checkedAt: "2026-06-11T18:01:00.000Z"
+      }
+    ]);
+
+    expect(unchanged.matches[0]?.cctvUrl).toBe(withCctv.matches[0]?.cctvUrl);
+    expect(unchanged.matches[0]?.sequence).toBe(withCctv.matches[0]?.sequence);
+  });
 });

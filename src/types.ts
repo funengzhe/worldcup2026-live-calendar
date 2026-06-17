@@ -34,6 +34,10 @@ export interface Match {
   goals: Goal[];
   confidence: Confidence;
   source: string;
+  cctvGameId?: number;
+  cctvUrl?: string;
+  cctvVenue?: string;
+  cctvChannel?: string;
   sequence: number;
   updatedAt: string;
 }
@@ -56,9 +60,33 @@ export interface Publication {
   sha256: string;
 }
 
+export type SponsorStatus = "pending" | "paid";
+
+export interface SponsorRecord {
+  outTradeNo: string;
+  tradeNo?: string;
+  amount: string;
+  displayName: string;
+  note?: string;
+  status: SponsorStatus;
+  createdAt: string;
+  paidAt?: string;
+}
+
+export interface SavedCalendar {
+  slug: string;
+  query: string;
+  title: string;
+  matchCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppState {
   matches: Match[];
   providers: ProviderStatus[];
+  sponsors?: SponsorRecord[];
+  savedCalendars?: SavedCalendar[];
   publication?: Publication;
   lastScheduleSyncAt?: string;
   lastScoreSyncAt?: string;
@@ -76,6 +104,10 @@ export interface ScoreUpdate {
   score?: Score;
   goals: Goal[];
   confidence: Confidence;
+  cctvGameId?: number;
+  cctvUrl?: string;
+  cctvVenue?: string;
+  cctvChannel?: string;
   checkedAt: string;
 }
 

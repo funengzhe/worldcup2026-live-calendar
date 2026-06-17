@@ -101,22 +101,22 @@ const TEAM_COUNTRY_CODE: Record<string, string> = {
 };
 
 const VENUE_ZH: Record<string, string> = {
-  Atlanta: "亚特兰大",
-  "Boston (Foxborough)": "波士顿（福克斯堡）",
-  "Dallas (Arlington)": "达拉斯（阿灵顿）",
-  Houston: "休斯敦",
-  "Kansas City": "堪萨斯城",
-  "Los Angeles (Inglewood)": "洛杉矶（英格尔伍德）",
-  "Mexico City": "墨西哥城",
-  "Miami (Miami Gardens)": "迈阿密（迈阿密花园）",
-  "Monterrey (Guadalupe)": "蒙特雷（瓜达卢佩）",
-  "New York/New Jersey (East Rutherford)": "纽约/新泽西（东卢瑟福）",
-  Philadelphia: "费城",
-  "San Francisco Bay Area (Santa Clara)": "旧金山湾区（圣克拉拉）",
-  "Seattle": "西雅图",
-  "Toronto": "多伦多",
-  "Vancouver": "温哥华",
-  "Guadalajara (Zapopan)": "瓜达拉哈拉（萨波潘）"
+  Atlanta: "亚特兰大 · 亚特兰大体育场",
+  "Boston (Foxborough)": "波士顿 · 波士顿体育场（福克斯堡）",
+  "Dallas (Arlington)": "达拉斯 · 达拉斯体育场（阿灵顿）",
+  Houston: "休斯敦 · 休斯敦体育场",
+  "Kansas City": "堪萨斯城 · 堪萨斯城体育场",
+  "Los Angeles (Inglewood)": "洛杉矶 · 洛杉矶体育场（英格尔伍德）",
+  "Mexico City": "墨西哥城 · 墨西哥城体育场",
+  "Miami (Miami Gardens)": "迈阿密 · 迈阿密体育场（迈阿密花园）",
+  "Monterrey (Guadalupe)": "蒙特雷 · 蒙特雷体育场（瓜达卢佩）",
+  "New York/New Jersey (East Rutherford)": "纽约/新泽西 · 纽约新泽西体育场（东卢瑟福）",
+  Philadelphia: "费城 · 费城体育场",
+  "San Francisco Bay Area (Santa Clara)": "旧金山湾区 · 旧金山湾区体育场（圣克拉拉）",
+  Seattle: "西雅图 · 西雅图体育场",
+  Toronto: "多伦多 · 多伦多体育场",
+  Vancouver: "温哥华 · 温哥华体育场",
+  "Guadalajara (Zapopan)": "瓜达拉哈拉 · 瓜达拉哈拉体育场（萨波潘）"
 };
 
 const STATUS_ZH: Record<MatchStatus, string> = {
@@ -161,9 +161,12 @@ export function groupOrRoundZh(match: Match): string {
 export function stageZh(stage: string): string {
   const map: Record<string, string> = {
     group: "小组赛",
+    "round-of-32": "32强",
     "round-of-16": "淘汰赛",
     "quarter-final": "四分之一决赛",
     "semi-final": "半决赛",
+    "match-for-third-place": "三四名决赛",
+    "third-place": "三四名决赛",
     final: "决赛"
   };
   return map[stage] ?? roundZh(stage);
@@ -183,6 +186,15 @@ export function formatBeijingDateTime(iso: string): string {
   const get = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((part) => part.type === type)?.value ?? "";
   return `${get("year")}年${get("month")}月${get("day")}日 ${get("weekday")} ${get("hour")}:${get("minute")}`;
+}
+
+export function formatBeijingTime(iso: string): string {
+  return new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).format(new Date(iso));
 }
 
 export function formatBeijingIcsLocal(iso: string): string {

@@ -1,7 +1,9 @@
 import type { AppConfig } from "./config.js";
 import { publishIcs } from "./calendar.js";
+import { formatError } from "./errors.js";
 import { fetchOpenFootballMatches, normalizeOpenFootballMatches } from "./openfootball.js";
 import { fetchApiFootballUpdates } from "./providers/apiFootball.js";
+import { fetchCctvUpdates } from "./providers/cctv.js";
 import { fetchEspnUpdates } from "./providers/espn.js";
 import { applyScoreUpdates } from "./providers/resolver.js";
 import { JsonStore, mergeMatches, setPublication, upsertProviderStatus } from "./store.js";
@@ -33,7 +35,7 @@ export async function syncSchedule(config: AppConfig, store: JsonStore) {
         name: "openfootball",
         ok: false,
         lastCheckedAt: checkedAt,
-        message: error instanceof Error ? error.message : String(error)
+        message: formatError(error)
       })
     );
     throw error;
@@ -88,10 +90,35 @@ export async function syncScores(config: AppConfig, store: JsonStore) {
           ok: false,
           required: true,
           lastCheckedAt: checkedAt,
-          message: error instanceof Error ? error.message : String(error)
+          message: formatError(error)
         })
       );
     }
+  }
+
+  try {
+    const cctvUpdates = await fetchCctvUpdates((await store.read()).matches, config.CCTV_SCHEDULE_URL);
+    updates.push(...cctvUpdates);
+    await store.update((current) =>
+      upsertProviderStatus(current, {
+        name: "cctv",
+        ok: true,
+        required: false,
+        lastCheckedAt: checkedAt,
+        lastSuccessAt: checkedAt,
+        message: `${cctvUpdates.length} updates loaded`
+      })
+    );
+  } catch (error) {
+    await store.update((current) =>
+      upsertProviderStatus(current, {
+        name: "cctv",
+        ok: false,
+        required: false,
+        lastCheckedAt: checkedAt,
+        message: formatError(error)
+      })
+    );
   }
 
   try {
@@ -115,7 +142,7 @@ export async function syncScores(config: AppConfig, store: JsonStore) {
         ok: false,
         required: primary !== "api-football",
         lastCheckedAt: checkedAt,
-        message: error instanceof Error ? error.message : String(error)
+        message: formatError(error)
       })
     );
     if (updates.length > 0) {

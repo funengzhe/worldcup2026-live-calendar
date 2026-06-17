@@ -12,7 +12,9 @@ describe("localization", () => {
   it("translates teams and venues", () => {
     expect(teamNameZh("Mexico")).toBe("墨西哥");
     expect(teamNameZh("W101")).toBe("第 101 场胜者");
-    expect(venueZh("New York/New Jersey (East Rutherford)")).toBe("纽约/新泽西（东卢瑟福）");
+    expect(venueZh("New York/New Jersey (East Rutherford)")).toBe(
+      "纽约/新泽西 · 纽约新泽西体育场（东卢瑟福）"
+    );
   });
 
   it("adds flags to real teams but not placeholders", () => {
