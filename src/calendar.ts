@@ -120,11 +120,13 @@ function eventLines(match: Match, calendarDomain: string, baseUrl: string, dtsta
 export function summary(match: Match): string {
   const home = teamDisplayNameZh(match.homeTeam);
   const away = teamDisplayNameZh(match.awayTeam);
-  if (match.status === "final" && match.score) {
+  if (match.score && match.status !== "scheduled" && match.status !== "postponed") {
     const base = `${home} ${match.score.home}-${match.score.away} ${away}`;
     if (match.score.penaltyHome !== undefined && match.score.penaltyAway !== undefined) {
       return `${base}（点球 ${match.score.penaltyHome}-${match.score.penaltyAway}）`;
     }
+    if (match.status === "live") return `${base}（进行中）`;
+    if (match.status === "halftime") return `${base}（中场）`;
     return base;
   }
 

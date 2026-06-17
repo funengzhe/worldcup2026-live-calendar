@@ -49,4 +49,14 @@ describe("calendar generation", () => {
       })
     ).toBe("🇲🇽 墨西哥 2-1 🇿🇦 南非");
   });
+
+  it("puts live scores in the event summary so mobile calendars show updates in lists", () => {
+    expect(
+      summary({
+        ...baseMatch,
+        status: "live",
+        score: { home: 1, away: 1 }
+      })
+    ).toBe("🇲🇽 墨西哥 1-1 🇿🇦 南非（进行中）");
+  });
 });
