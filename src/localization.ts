@@ -14,7 +14,7 @@ const TEAM_ZH: Record<string, string> = {
   Croatia: "克罗地亚",
   Curaçao: "库拉索",
   "Czech Republic": "捷克",
-  "DR Congo": "民主刚果",
+  "DR Congo": "刚果（金）",
   Ecuador: "厄瓜多尔",
   Egypt: "埃及",
   England: "英格兰",

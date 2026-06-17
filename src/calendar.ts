@@ -92,7 +92,6 @@ export function validateIcs(ics: string): void {
 function eventLines(match: Match, calendarDomain: string, baseUrl: string, dtstamp: string): string[] {
   const startBeijing = formatBeijingIcsLocal(match.kickoffAtUtc);
   const endBeijing = formatBeijingIcsLocal(addHours(match.kickoffAtUtc, 2));
-  const lastModified = formatUtcStamp(new Date(match.updatedAt));
   const matchUrl = `${baseUrl.replace(/\/$/, "")}/matches/${match.id}`;
 
   return [
@@ -101,7 +100,7 @@ function eventLines(match: Match, calendarDomain: string, baseUrl: string, dtsta
     `SEQUENCE:${match.sequence}`,
     `DTSTAMP:${dtstamp}`,
     `CREATED:${dtstamp}`,
-    `LAST-MODIFIED:${lastModified}`,
+    `LAST-MODIFIED:${dtstamp}`,
     `DTSTART;TZID=Asia/Shanghai:${startBeijing}`,
     `DTEND;TZID=Asia/Shanghai:${endBeijing}`,
     `SUMMARY:${escapeText(summary(match))}`,

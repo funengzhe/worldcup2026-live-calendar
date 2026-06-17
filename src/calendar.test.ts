@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { generateIcs, summary } from "./calendar.js";
 import type { Match } from "./types.js";
 
@@ -20,8 +20,14 @@ const baseMatch: Match = {
   updatedAt: "2026-06-01T00:00:00.000Z"
 };
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe("calendar generation", () => {
   it("generates a valid VCALENDAR with a stable match UID", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-17T18:50:00.000Z"));
     const ics = generateIcs([baseMatch], {
       calendarDomain: "example.com",
       baseUrl: "https://example.com"
@@ -35,6 +41,8 @@ describe("calendar generation", () => {
     expect(ics).toContain("X-APPLE-CALENDAR-COLOR:#1f8f3a");
     expect(ics).toContain("REFRESH-INTERVAL;VALUE=DURATION:PT5M");
     expect(ics).toContain("X-PUBLISHED-TTL:PT5M");
+    expect(ics).toContain("DTSTAMP:20260617T185000Z");
+    expect(ics).toContain("LAST-MODIFIED:20260617T185000Z");
     expect(ics).toContain("DTSTART;TZID=Asia/Shanghai:20260612T030000");
     expect(ics).toContain("SUMMARY:🇲🇽 墨西哥 vs 🇿🇦 南非");
     expect(ics).toContain("END:VCALENDAR");
